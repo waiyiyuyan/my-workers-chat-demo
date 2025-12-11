@@ -1,6 +1,5 @@
 name = "edge-chat-demo"
 compatibility_date = "2024-01-01"
-
 main = "src/chat.mjs"
 
 [durable_objects]
@@ -18,3 +17,4 @@ fallthrough = false
 [[migrations]]
 tag = "v1"                                       # Should be unique for each entry
 new_sqlite_classes = ["ChatRoom", "RateLimiter"]
+# new_classes = ["ChatRoom", "RateLimiter"]

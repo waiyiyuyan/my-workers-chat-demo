@@ -1,482 +1,340 @@
 <!DOCTYPE html>
-<!--
-  THIS IS NOT THE INTERESTING FILE
-
-  This is just some UI code. There's nothing interesting and unique in this file. The interesting
-  thing about this demo is the server side, which is in chat.mjs.
-
-  WARNING: This was written by a systems engineer, not a web developer. It's probably bad.
--->
-
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<!--===================================================================================-->
-<!-- Inline style to avoid an extra round trip before the page can render. -->
-<style type="text/css">
-* {
-  box-sizing: border-box;
-}
-body {
-  font-family: Arial, Helvetica, sans-serif;
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>微信聊天室</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:-apple-system,"Helvetica Neue",Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:#dbdbdb;                     /* 微信2.0经典灰底 */
+  height:100vh;overflow:hidden;
+  -webkit-text-size-adjust:none;
 }
 
-#chatlog {
-  position: fixed;
-  top: 0;
-  bottom: 32px;
-  left: 0;
-  right: 200px;
-  overflow-y: auto;
-  padding: 8px;
-  overflow-wrap: break-word;
+/* ==================== 顶部栏 ==================== */
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:64px;
+  background:linear-gradient(#a5a39a,#8e8c84);
+  box-shadow:0 1px 4px rgba(0,0,0,0.4);
+  color:#fff;text-align:center;line-height:64px;
+  font-size:18px;font-weight:bold;text-shadow:0 -1px 0 rgba(0,0,0,0.6);
+  z-index:100;display:none;
 }
-#chatlog span.username {
-  font-weight: bold;
-}
-#spacer {
-  height: calc(100vh - 32px - 5em);
+#back-btn{
+  position:absolute;left:12px;top:0;bottom:0;margin:auto;
+  height:44px;line-height:44px;font-size:16px;color:#fff;opacity:0.9;cursor:pointer;
 }
 
-#roster {
-  font-weight: bold;
-  padding: 8px;
+/* ==================== 聊天区域 ==================== */
+#chatlog{
+  position:fixed;top:64px;bottom:54px;left:0;right:0;
+  overflow-y:auto;padding:10px 8px 0;
+  background:#dbdbdb;
+  -webkit-overflow-scrolling:touch;
 }
 
-p {
-  margin-top: 0;
-  margin-bottom: 8px;
+/* 别人消息（左边灰白） */
+.msg.left{clear:both;float:left;margin:8px 10px 8px 10px;max-width:72%;}
+.msg.left .bubble{
+  background:#ffffff;border:1px solid #c8c7cc;border-radius:10px;
+  padding:9px 13px;font-size:17px;line-height:1.45;color:#000;
+  position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.15);
 }
-p:last-of-type {
-  margin: 0;
-}
-
-#roster {
-  position: fixed;
-  right: 0;
-  top: 0;
-  bottom: 32px;
-  width: 200px;
-  border-left: none;
+.msg.left .bubble::before{
+  content:"";position:absolute;left:-6px;top:10px;
+  border:6px solid transparent;border-right-color:#fff;
 }
 
-::-webkit-scrollbar {
-  display: none;
+/* 自己消息（右边经典绿） */
+.msg.right{clear:both;float:right;margin:8px 10px 8px 10px;max-width:72%;}
+.msg.right .bubble{
+  background:#9fe15a;border-radius:10px;
+  padding:9px 13px;font-size:17px;line-height:1.45;color:#000;
+  position:relative;box-shadow:0 1px 2px rgba(0,0,0,0.15);
+}
+.msg.right .bubble::before{
+  content:"";position:absolute;right:-6px;top:10px;
+  border:6px solid transparent;border-left-color:#9fe15a;
 }
 
-@media(max-width:600px) {
-  #roster { display: none; }
-  #chatlog { right: 0; }
+/* 时间标签（可选） */
+.msg .header{font-size:12px;color:#888;margin-bottom:4px;padding:0 8px;}
+.msg.right .header{text-align:right;}
+
+/* ==================== 输入栏（2012经典深灰） ==================== */
+#input-bar{
+  position:fixed;bottom:0;left:0;right:0;height:54px;
+  background:#c9c9c9;border-top:1px solid #a0a0a0;
+  display:flex;align-items:center;padding:0 8px;
+}
+#chat-input{
+  flex:1;height:36px;background:#fff;border:1px solid #9f9f9f;
+  border-radius:6px;padding:0 10px;font-size:17px;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.3);margin-right:8px;
+}
+#send-btn{
+  width:64px;height:36px;
+  background:linear-gradient(#8cc44a,#6f9f2b);border:1px solid #5d801e;
+  border-radius:6px;color:#fff;font-weight:bold;font-size:16px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4);
 }
 
-#chat-input {
-  position: fixed;
-  width: 100%;
-  height: 32px;
-  bottom: 0;
-  left: 0;
-  border: none;
-  border-top: none;
-  padding-left: 32px;
-  outline: none;
+/* ==================== 登录页（2011微信风格） ==================== */
+#start-form{
+  position:fixed;inset:0;
+  background:#c9c9c9;                         /* 深灰底，和输入栏一致 */
+  display:flex;justify-content:center;align-items:center;
+  z-index:10;
 }
-#chatroom::before {
-  z-index: 1;
-  display: block;
-  content: ">";
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 32px;
-  height: 32px;
-  line-height: 32px;
-  text-align: center;
-  font-weight: bold;
-  color: #888;
-  -webkit-text-stroke-width: 2px;
+#start-box{
+  width:90%;max-width:320px;
+  background:#f1f1f1;
+  border:1px solid #b0b0b0;
+  border-radius:8px;
+  padding:30px 20px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.4);
+  text-align:center;
 }
-
-#name-form {
-  position: fixed;
-  z-index: 3;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: white;
+#start-box h2{
+  font-size:20px;color:#000;margin-bottom:25px;
+  font-weight:normal;
 }
-
-#name-input {
-  position: fixed;
-  font-size: 200%;
-  top: calc(50% - 1em);
-  left: calc(50% - 8em);
-  width: 16em;
-  height: 2em;
-  margin: 0;
-  text-align: center;
-  border: 1px solid #bbb;
+#start-box input{
+  width:100%;padding:12px 10px;margin:10px 0;
+  border:1px solid #a0a0a0;border-radius:6px;
+  background:#fff;font-size:17px;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,0.2);
 }
-
-#name-form p {
-  position: fixed;
-  top: calc(50% + 3em);
-  width: 100%;
-  text-align: center;
+#start-box button{
+  width:100%;padding:13px;margin:10px 0;
+  border-radius:6px;border:1px solid #5d801e;
+  font-size:17px;font-weight:bold;color:#fff;
+  box-shadow:0 2px 4px rgba(0,0,0,0.3);
 }
-
-#room-form {
-  position: fixed;
-  z-index: 2;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: white;
-  font-size: 200%;
-  margin-top: calc(50vh - 3em);
-  text-align: center;
+#join-public{background:linear-gradient(#8cc44a,#6f9f2b);}
+#create-private{background:linear-gradient(#8cc44a,#6f9f2b);}
+#rejoin-last-btn{
+  background:linear-gradient(#ff9a00,#ff7300);
+  border:1px solid #d85400;
 }
-
-#room-name {
-  font-size: inherit;
-  border: 1px solid #bbb;
-  height: 2em;
-  width: 16em;
-  padding-left: 1em;
+#start-box p{
+  margin-top:20px;color:#666;font-size:13px;
 }
-
-#room-form button {
-  font-size: inherit;
-  border: 1px solid #bbb;
-  background-color: #eee;
-  height: 2em;
-}
-
-@media(max-width:660px) {
-  #name-input, #room-form { font-size: 150%; }
-  #name-form p { font-size: 75%; }
-}
-@media(max-width:500px) {
-  #name-input, #room-form { font-size: 100%; }
-  #name-form p { font-size: 50%; }
-}
-
-#go-public {
-  width: 4em;
-}
-#go-private {
-  width: 20em;
-}
-
 </style>
+</head>
+<body>
 
-<!--===================================================================================-->
-<!-- The actual HTML. There is not much of it. -->
+<div id="topbar">
+  <div id="back-btn" onclick="backToLogin()">返回</div>
+  <span id="room-title">聊天室</span>
+</div>
 
-  </head>
-  <body>
-    <form id="name-form" action="/fake-form-action">
-      <input id="name-input" placeholder="your name">
-      <p>This chat runs entirely on the edge, powered by<br>
-        <a href="https://blog.cloudflare.com/introducing-workers-durable-objects" target="_blank">Cloudflare Workers Durable Objects</a></p>
-    </form>
-    <form id="room-form" action="/fake-form-action">
-      <p>Enter a public room:</p>
-      <input id="room-name" placeholder="room name"><button id="go-public">Go &raquo;</button>
-      <p>OR</p>
-      <button id="go-private">Create a Private Room &raquo;</button>
-    </form>
-    <form id="chatroom" action="/fake-form-action">
-      <div id="chatlog">
-        <div id="spacer"></div>
-      </div>
-      <div id="roster"></div>
-      <input id="chat-input">
-    </form>
-  </body>
+<div id="start-form">
+  <div id="start-box">
+    <h2>微信聊天室</h2>
+    <input id="name-input" placeholder="你的名字（必填）" maxlength="20">
+    <input id="room-input" placeholder="房间名（可选）" maxlength="30">
+    <button type="button" id="join-public">加入公共房间</button>
+    <button type="button" id="create-private">创建私人房间</button>
+    <button type="button" id="rejoin-last-btn" style="display:none;">重新进入上一个私人房间</button>
+    <p style="margin-top:25px;color:#888;font-size:13px">微信 2.0 复古风 · 2025 复刻版</p>
+  </div>
+</div>
 
-<!--===================================================================================-->
-<!-- Client-side JavaScript code for the app. -->
+<div id="chatroom" style="display:none">
+  <div id="chatlog"></div>
+  <div id="input-bar">
+    <input id="chat-input" placeholder="说点什么...">
+    <button id="send-btn" onclick="sendMessage()">发送</button>
+  </div>
+</div>
 
-<script type="text/javascript">
-let currentWebSocket = null;
+<script>
+// 防重名 + 记住上一个私人房间
+// 首次打开网页时清空上次残留的房间记录（这样就不会出现“重新进入”按钮）
+if (!sessionStorage.getItem("hasVisited")) {
+  localStorage.removeItem("lastPrivateRoom");
+  sessionStorage.setItem("hasVisited", "true");
+}
+let realName = "";
+// let uniqueId = "";
+let uniqueId = localStorage.getItem("myUniqueId") || generateId();
+if (!uniqueId) {
+  uniqueId = generateId();
+  localStorage.setItem("myUniqueId", uniqueId);
+}
 
-let nameForm = document.querySelector("#name-form");
-let nameInput = document.querySelector("#name-input");
-let roomForm = document.querySelector("#room-form");
-let roomNameInput = document.querySelector("#room-name");
-let goPublicButton = document.querySelector("#go-public");
-let goPrivateButton = document.querySelector("#go-private");
-let chatroom = document.querySelector("#chatroom");
-let chatlog = document.querySelector("#chatlog");
-let chatInput = document.querySelector("#chat-input");
-let roster = document.querySelector("#roster");
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 8);
+}
 
-// Is the chatlog scrolled to the bottom?
+const chatlog = document.getElementById("chatlog");
+const chatInput = document.getElementById("chat-input");
+const startForm = document.getElementById("start-form");
+const chatroom = document.getElementById("chatroom");
+const topbar = document.getElementById("topbar");
+let username = "", roomname = "", ws = null;
+const hostname = location.host.includes('localhost') ? 'localhost:8788' : 'edge-chat-demo.cloudflareworkers.com';
 let isAtBottom = true;
+let welcomeDone = false;
 
-let username;
-let roomname;
+function backToLogin() {
+  if (ws) ws.close();
+  chatroom.style.display = "none";
+  topbar.style.display = "none";
+  startForm.style.display = "flex";
+  chatlog.innerHTML = "";
+  welcomeDone = false;
+  location.hash = "";
 
-let hostname = window.location.host;
-if (hostname == "") {
-  // Probably testing the HTML locally.
-  hostname = "edge-chat-demo.cloudflareworkers.com";
-}
+  // 恢复按钮
+  const createBtn = document.getElementById("create-private");
+  createBtn.disabled = false;
+  createBtn.textContent = "创建私人房间";
 
-function startNameChooser() {
-  nameForm.addEventListener("submit", event => {
-    event.preventDefault();
-    username = nameInput.value;
-    if (username.length > 0) {
-      startRoomChooser();
-    }
-  });
-
-  nameInput.addEventListener("input", event => {
-    if (event.currentTarget.value.length > 32) {
-      event.currentTarget.value = event.currentTarget.value.slice(0, 32);
-    }
-  });
-
-  nameInput.focus();
-}
-
-function startRoomChooser() {
-  nameForm.remove();
-
-  if (document.location.hash.length > 1) {
-    roomname = document.location.hash.slice(1);
-    startChat();
-    return;
+  // 把上一个私人房间填回去 + 显示“重新进入”按钮
+  const lastRoom = localStorage.getItem("lastPrivateRoom");
+  if (lastRoom && lastRoom !== "default-room") {
+    document.getElementById("room-input").value = lastRoom;
   }
-
-  roomForm.addEventListener("submit", event => {
-    event.preventDefault();
-    roomname = roomNameInput.value;
-    if (roomname.length > 0) {
-      startChat();
-    }
-  });
-
-  roomNameInput.addEventListener("input", event => {
-    if (event.currentTarget.value.length > 32) {
-      event.currentTarget.value = event.currentTarget.value.slice(0, 32);
-    }
-  });
-
-  goPublicButton.addEventListener("click", event => {
-    roomname = roomNameInput.value;
-    if (roomname.length > 0) {
-      startChat();
-    }
-  });
-
-  goPrivateButton.addEventListener("click", async event => {
-    roomNameInput.disabled = true;
-    goPublicButton.disabled = true;
-    event.currentTarget.disabled = true;
-
-    let response = await fetch("https://" + hostname + "/api/room", {method: "POST"});
-    if (!response.ok) {
-      alert("something went wrong");
-      document.location.reload();
-      return;
-    }
-
-    roomname = await response.text();
-    startChat();
-  });
-
-  roomNameInput.focus();
+  checkRejoinButton();
 }
+
+function getTimeStr() {
+  const h = new Date().getHours();
+  const m = new Date().getMinutes().toString().padStart(2,'0');
+  return (h < 12 ? "上午 " : "下午 ") + ((h+11)%12+1) + ":" + m;
+}
+
+function addMessage(name, text, type = "normal") {
+  const displayName = name?.includes("##") ? name.split("##")[0] : name || "匿名";
+  const isMe = name === username;
+
+  const div = document.createElement("div");
+  if (type === "system") {
+    div.className = "msg system";
+    div.innerHTML = `<div class="bubble">${text}</div>`;
+  } else {
+    div.className = `msg ${isMe ? "right" : "left"}`;
+    const header = document.createElement("div");
+    header.className = "header";
+    header.textContent = `${displayName}  ${getTimeStr()}`;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    div.appendChild(header);
+    div.appendChild(bubble);
+  }
+  chatlog.appendChild(div);
+  if (isAtBottom) chatlog.scrollTop = chatlog.scrollHeight;
+}
+
+chatlog.addEventListener("scroll", () => {
+  isAtBottom = chatlog.scrollTop + chatlog.clientHeight >= chatlog.scrollHeight - 50;
+});
 
 function startChat() {
-  roomForm.remove();
+  // 记住当前房间（关键！）
+  localStorage.setItem("lastPrivateRoom", roomname);
 
-  // Normalize the room name a bit.
-  roomname = roomname.replace(/[^a-zA-Z0-9_-]/g, "").replace(/_/g, "-").toLowerCase();
-
-  if (roomname.length > 32 && !roomname.match(/^[0-9a-f]{64}$/)) {
-    addChatMessage("ERROR", "Invalid room name.");
-    return;
-  }
-
-  document.location.hash = "#" + roomname;
-
-  chatInput.addEventListener("keydown", event => {
-    if (event.keyCode == 38) {
-      // up arrow
-      chatlog.scrollBy(0, -50);
-    } else if (event.keyCode == 40) {
-      // down arrow
-      chatlog.scrollBy(0, 50);
-    } else if (event.keyCode == 33) {
-      // page up
-      chatlog.scrollBy(0, -chatlog.clientHeight + 50);
-    } else if (event.keyCode == 34) {
-      // page down
-      chatlog.scrollBy(0, chatlog.clientHeight - 50);
-    }
-  });
-
-  chatroom.addEventListener("submit", event => {
-    event.preventDefault();
-
-    if (currentWebSocket) {
-      currentWebSocket.send(JSON.stringify({message: chatInput.value}));
-      chatInput.value = "";
-
-      // Scroll to bottom whenever sending a message.
-      chatlog.scrollBy(0, 1e8);
-    }
-  });
-
-  chatInput.addEventListener("input", event => {
-    if (event.currentTarget.value.length > 256) {
-      event.currentTarget.value = event.currentTarget.value.slice(0, 256);
-    }
-  });
-
-  chatlog.addEventListener("scroll", event => {
-    isAtBottom = chatlog.scrollTop + chatlog.clientHeight >= chatlog.scrollHeight;
-  });
-
+  roomname = (roomname || document.getElementById("room-input").value.trim() || "default-room")
+    .replace(/[^a-zA-Z0-9_-]/g,"").toLowerCase() || "default-room";
+  location.hash = roomname;
+  document.getElementById("room-title").textContent = roomname === "default-room" ? "公共聊天室" : "私密房间";
+  startForm.style.display = "none";
+  chatroom.style.display = "block";
+  topbar.style.display = "block";
   chatInput.focus();
-  document.body.addEventListener("click", event => {
-    // If the user clicked somewhere in the window without selecting any text, focus the chat
-    // input.
-    if (window.getSelection().toString() == "") {
-      chatInput.focus();
-    }
-  });
-
-  // Detect mobile keyboard appearing and disappearing, and adjust the scroll as appropriate.
-  if('visualViewport' in window) {
-    window.visualViewport.addEventListener('resize', function(event) {
-      if (isAtBottom) {
-        chatlog.scrollBy(0, 1e8);
-      }
-    });
-  }
-
-  join();
+  connectWebSocket();
 }
 
-let lastSeenTimestamp = 0;
-let wroteWelcomeMessages = false;
+// 加入公共房间
+document.getElementById("join-public").onclick = () => {
+  realName = document.getElementById("name-input").value.trim();
+  if (!realName) return alert("请填写昵称！");
+  // uniqueId = generateId();
+  username = `${realName}##${uniqueId}`;
+  roomname = document.getElementById("room-input").value.trim();
+  startChat();
+};
 
-function join() {
-  // If we are running via wrangler dev, use ws:
-  const wss = document.location.protocol === "http:" ? "ws://" : "wss://";
-  let ws = new WebSocket(wss + hostname + "/api/room/" + roomname + "/websocket");
-  let rejoined = false;
-  let startTime = Date.now();
-
-  let rejoin = async () => {
-    if (!rejoined) {
-      rejoined = true;
-      currentWebSocket = null;
-
-      // Clear the roster.
-      while (roster.firstChild) {
-        roster.removeChild(roster.firstChild);
-      }
-
-      // Don't try to reconnect too rapidly.
-      let timeSinceLastJoin = Date.now() - startTime;
-      if (timeSinceLastJoin < 10000) {
-        // Less than 10 seconds elapsed since last join. Pause a bit.
-        await new Promise(resolve => setTimeout(resolve, 10000 - timeSinceLastJoin));
-      }
-
-      // OK, reconnect now!
-      join();
-    }
+// 创建私人房间
+document.getElementById("create-private").onclick = async () => {
+  realName = document.getElementById("name-input").value.trim();
+  if (!realName) return alert("请填写昵称！");
+  const btn = document.getElementById("create-private");
+  btn.disabled = true;
+  btn.textContent = "创建中…";
+  // uniqueId = generateId();
+  username = `${realName}##${uniqueId}`;
+  try {
+    const res = await fetch(`https://${hostname}/api/room`, {method:"POST"});
+    roomname = await res.text();
+    startChat();
+  } catch {
+    alert("创建失败，请重试");
+    btn.disabled = false;
+    btn.textContent = "创建私人房间";
   }
+};
 
-  ws.addEventListener("open", event => {
-    currentWebSocket = ws;
-
-    // Send user info message.
-    ws.send(JSON.stringify({name: username}));
-  });
-
-  ws.addEventListener("message", event => {
-    let data = JSON.parse(event.data);
-
-    if (data.error) {
-      addChatMessage(null, "* Error: " + data.error);
-    } else if (data.joined) {
-      let p = document.createElement("p");
-      p.innerText = data.joined;
-      roster.appendChild(p);
-    } else if (data.quit) {
-      for (let child of roster.childNodes) {
-        if (child.innerText == data.quit) {
-          roster.removeChild(child);
-          break;
-        }
-      }
-    } else if (data.ready) {
-      // All pre-join messages have been delivered.
-      if (!wroteWelcomeMessages) {
-        wroteWelcomeMessages = true;
-        addChatMessage(null,
-            "* This is a demo app built with Cloudflare Workers Durable Objects. The source code " +
-            "can be found at: https://github.com/cloudflare/workers-chat-demo");
-        addChatMessage(null,
-            "* WARNING: Participants in this chat are random people on the internet. " +
-            "Names are not authenticated; anyone can pretend to be anyone. The people " +
-            "you are chatting with are NOT Cloudflare employees. Chat history is saved.");
-        if (roomname.length == 64) {
-          addChatMessage(null,
-              "* This is a private room. You can invite someone to the room by sending them the URL.");
-        } else {
-          addChatMessage(null,
-              "* Welcome to #" + roomname + ". Say hi!");
-        }
-      }
-    } else {
-      // A regular chat message.
-      if (data.timestamp > lastSeenTimestamp) {
-        addChatMessage(data.name, data.message);
-        lastSeenTimestamp = data.timestamp;
-      }
-    }
-  });
-
-  ws.addEventListener("close", event => {
-    console.log("WebSocket closed, reconnecting:", event.code, event.reason);
-    rejoin();
-  });
-  ws.addEventListener("error", event => {
-    console.log("WebSocket error, reconnecting:", event);
-    rejoin();
-  });
-}
-
-function addChatMessage(name, text) {
-  let p = document.createElement("p");
-  if (name) {
-    let tag = document.createElement("span");
-    tag.className = "username";
-    tag.innerText = name + ": ";
-    p.appendChild(tag);
-  }
-  p.appendChild(document.createTextNode(text));
-
-  // Append the new chat line, making sure that if the chatlog was scrolled to the bottom
-  // before, it remains scrolled to the bottom, and otherwise the scroll position doesn't
-  // change.
-  chatlog.appendChild(p);
-  if (isAtBottom) {
-    chatlog.scrollBy(0, 1e8);
+// 一键重新进入上一个私人房间
+function checkRejoinButton() {
+  const lastRoom = localStorage.getItem("lastPrivateRoom");
+  const btn = document.getElementById("rejoin-last-btn");
+  if (lastRoom && lastRoom !== "default-room") {
+    btn.style.display = "block";
+    btn.onclick = () => {
+      document.getElementById("room-input").value = lastRoom;
+      document.getElementById("join-public").click();
+    };
+  } else {
+    btn.style.display = "none";
   }
 }
 
-startNameChooser();
+// 页面加载时检查
+window.addEventListener("load", () => {
+  const hashRoom = location.hash.substring(1);
+  if (hashRoom) document.getElementById("room-input").value = hashRoom;
+  checkRejoinButton();
+});
+
+function connectWebSocket() {
+  if (ws) ws.close();
+  welcomeDone = false;
+  const protocol = location.protocol === "https:" ? "wss://" : "ws://";
+  ws = new WebSocket(`${protocol}${hostname}/api/room/${roomname}/websocket`);
+
+  ws.onopen = () => ws.send(JSON.stringify({name: username}));
+  ws.onmessage = e => {
+    const d = JSON.parse(e.data);
+    if (d.error) addMessage("系统", "错误 " + d.error, "system");
+    else if (d.ready && !welcomeDone) welcomeDone = true;
+    else if (d.message) addMessage(d.name || "匿名", d.message);
+  };
+  ws.onclose = ws.onerror = () => {
+    addMessage("系统", "连接断开，3秒后重连…", "system");
+    setTimeout(connectWebSocket, 3000);
+  };
+}
+
+function sendMessage() {
+  const msg = chatInput.value.trim();
+  if (msg && ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({message: msg}));
+    chatInput.value = "";
+  }
+}
+
+chatInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
 </script>
-<!--===================================================================================-->
+</body>
 </html>
