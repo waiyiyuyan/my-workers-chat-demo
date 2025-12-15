@@ -453,22 +453,22 @@
     </div>
   </div>
 
-  <!-- 用户列表页面 -->
- <div id="user-list-page" style="display: none;">
-  <!-- 底部定位的选项卡 -->
-  <div style="position: fixed; bottom: 48px; left: 0; right: 0; height: 40px; display: flex; background: #333; z-index: 100; border-top: 1px solid #222;">
-    <button id="tab-user-list" style="flex: 1; height: 100%; border: none; background: #555; color: #fff; font-size: 16px;">当前用户</button>
-    <button id="tab-chat" style="flex: 1; height: 100%; border: none; background: #444; color: #eee; font-size: 16px;">聊天</button>
-  </div>
-
-  <!-- 适配底部选项卡的用户列表 -->
-  <div style="padding-top: 44px; padding-bottom: 88px; min-height: 100vh; background: #d9d5d9;">
+<!-- 用户列表页面 -->
+<div id="user-list-page" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto;">
+  <!-- 内容区（适配顶部导航栏 + 底部选项卡） -->
+  <div style="padding-top: 44px; padding-bottom: 40px; background: #d9d5d9; min-height: 100%;">
     <div id="online-users" style="padding: 15px; font-size: 16px; color: #333;">
-      <p style="margin-bottom: 10px; font-weight: 500;">当前房间用户：</p>
+      <p id="room-status-title" style="margin-bottom: 10px; font-weight: 500;">当前房间用户：</p>
       <ul id="users-list" style="list-style: none; padding: 0; margin: 0;">
         <!-- 动态渲染用户列表 -->
       </ul>
     </div>
+  </div>
+
+  <!-- 选项卡绝对定位在父容器底部 -->
+  <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; display: flex; background: #333; z-index: 100; border-top: 1px solid #222;">
+    <button id="tab-user-list" style="flex: 1; height: 100%; border: none; background: #555; color: #fff; font-size: 16px;">当前用户</button>
+    <button id="tab-chat" style="flex: 1; height: 100%; border: none; background: #444; color: #eee; font-size: 16px;">聊天</button>
   </div>
 </div>
 
@@ -481,6 +481,7 @@
     let lastSeenTimestamp = 0;
     let wroteWelcomeMessages = false;
     let onlineUsers = [];
+	let userFirstJoinTime = {}; 
 
     // DOM 选择器
     const loginForm = document.querySelector("#login-form");
@@ -526,24 +527,32 @@
 
       return processedText;
     }
-
+	
     // 渲染用户列表
     function renderUserList() {
-      if (!usersList) return;
-      
-      usersList.innerHTML = "";
-      onlineUsers.forEach(user => {
-        const li = document.createElement("li");
-        li.style.padding = "8px 0";
-        li.style.borderBottom = "1px solid #ccc";
-        li.textContent = user;
-        usersList.appendChild(li);
-      });
-      
-      if (onlineUsers.length === 0) {
-        usersList.innerHTML = "<li style='padding: 8px 0; color: #666;'>当前暂无在线用户</li>";
-      }
-    }
+	  if (!usersList) return;
+	  
+	  usersList.innerHTML = "";
+	  onlineUsers.forEach(user => {
+	  const li = document.createElement("li");
+	  li.style.padding = "8px 0";
+	  li.style.borderBottom = "1px solid #ccc";
+		
+		// 👇 核心逻辑：仅在「首次显示该用户」时记录时间（固定值，永不改）
+		if (!userFirstJoinTime[user]) {
+		  const joinTime = new Date(); // 该用户首次出现的时间=他的加入时间
+		  userFirstJoinTime[user] = `${joinTime.getFullYear()}-${String(joinTime.getMonth()+1).padStart(2, '0')}-${String(joinTime.getDate()).padStart(2, '0')} ${String(joinTime.getHours()).padStart(2, '0')}:${String(joinTime.getMinutes()).padStart(2, '0')}:${String(joinTime.getSeconds()).padStart(2, '0')}`;
+		}
+		
+		// 👇 显示固定时间（一旦记录，永远是他自己的加入时间）
+		li.innerHTML = `${user} <span style="color:#999; font-size:12px; margin-left:8px;">(${userFirstJoinTime[user]})</span>`;
+		usersList.appendChild(li);
+	  });
+	  
+	  if (onlineUsers.length === 0) {
+		usersList.innerHTML = "<li style='padding: 8px 0; color: #666;'>当前暂无在线用户</li>";
+	  }
+	}
 
     // 初始化登录表单
     function initLoginForm() {
@@ -624,14 +633,32 @@
 	  } else {
 		// 2. 用户列表页 → 切到登录页（退出、关闭连接、重置数据）
 		if (currentWebSocket) {
-		  currentWebSocket.onclose = null;
-		  currentWebSocket.onerror = null;
-		  currentWebSocket.close();
-		  currentWebSocket = null;
+			try {
+			  currentWebSocket.send(JSON.stringify({ 
+			  type: "quit", 
+			  username: username // 告诉服务端要删除的是当前用户
+			}));
+			} catch (e) {
+				console.log("退出时通知服务端失败:", e);
+			}
+			// ---
+			delete userFirstJoinTime[username]; 
+			onlineUsers = onlineUsers.filter(u => u !== username);
+			renderUserList();
+			// ---
+			currentWebSocket.onclose = null;
+			currentWebSocket.onerror = null;
+			currentWebSocket.close();
+			currentWebSocket = null;
 		}
 		
+		if (username && onlineUsers.length > 0) {
+		  onlineUsers = onlineUsers.filter(u => u !== username); // 过滤掉自己
+		  renderUserList(); // 同步更新DOM列表
+		}
+			
 		connectStatus.style.display = "none";
-		roomTitle.textContent = "cloudflare chatroom";
+		// roomTitle.textContent = "cloudflare chatroom";
 		userListPage.style.display = "none";
 		backBtn.style.display = "none";
 		copyLinkBtn.style.display = "none";
@@ -641,6 +668,17 @@
 		lastSeenTimestamp = 0;
 		username = "";
 		roomname = "";
+		
+		const roomStatusTitle = document.querySelector("#room-status-title");
+		if (roomStatusTitle) {
+		  roomStatusTitle.textContent = "";
+		}
+		
+		// const roomTitle = document.querySelector("#room-title");
+		if (roomTitle) {
+		  roomTitle.style.display = "block"; // 恢复显示
+		  roomTitle.textContent = "cloudflare chatroom"; // 重置文字
+		}
 		
 		nameInput.value = "";
 		if (window.location.hash) {
@@ -655,25 +693,25 @@
 
       // 聊天输入框键盘事件
       chatInput.addEventListener("keydown", event => {
-        if (event.key === "Enter" && !event.shiftKey) {
-          event.preventDefault(); 
-          const start = chatInput.selectionStart;
-          const end = chatInput.selectionEnd;
-          chatInput.value = chatInput.value.substring(0, start) + "\n" + chatInput.value.substring(end);
-          chatInput.selectionStart = chatInput.selectionEnd = start + 1;
-        } else if (event.key === "Enter" && event.shiftKey) {
-          event.preventDefault();
-          sendMessage();
-        } else if (event.keyCode == 38) {
-          chatlog.scrollBy(0, -50);
-        } else if (event.keyCode == 40) {
-          chatlog.scrollBy(0, 50);
-        } else if (event.keyCode == 33) {
-          chatlog.scrollBy(0, -chatlog.clientHeight + 50);
-        } else if (event.keyCode == 34) {
-          chatlog.scrollBy(0, chatlog.clientHeight - 50);
-        }
-      });
+	  // 仅保留：Enter（无论是否加shift）都只换行，不发送
+	  if (event.key === "Enter") {
+		event.preventDefault(); 
+		const start = chatInput.selectionStart;
+		const end = chatInput.selectionEnd;
+		chatInput.value = chatInput.value.substring(0, start) + "\n" + chatInput.value.substring(end);
+		chatInput.selectionStart = chatInput.selectionEnd = start + 1;
+	  } 
+	  // 保留上下翻页等快捷键（可选，不影响核心逻辑）
+	  else if (event.keyCode == 38) {
+		chatlog.scrollBy(0, -50);
+	  } else if (event.keyCode == 40) {
+		chatlog.scrollBy(0, 50);
+	  } else if (event.keyCode == 33) {
+		chatlog.scrollBy(0, -chatlog.clientHeight + 50);
+	  } else if (event.keyCode == 34) {
+		chatlog.scrollBy(0, chatlog.clientHeight - 50);
+	  }
+	});
 
       // 发送按钮点击事件
       sendBtn.addEventListener("click", () => {
@@ -710,6 +748,8 @@
           userListPage.style.display = "none";
           chatroom.style.display = "block";
           chatlog.scrollBy(0, 1e8);
+		  chatInput.focus();
+		  chatInput.selectionStart = chatInput.selectionEnd = 0;
         });
       }
 
@@ -721,6 +761,8 @@
       loginForm.style.display = "none";
       if (userListPage) {
         userListPage.style.display = "block"; 
+		tabUserList.classList.add("active");
+		tabChat.classList.remove("active");
       }
       chatroom.style.display = "none";
       backBtn.style.display = "block";
@@ -734,7 +776,20 @@
         .substring(0, 32);
       
       console.log("前端格式化后房间名:", roomname);
-      roomTitle.textContent = `#${roomname}`;
+      // roomTitle.textContent = `#${roomname}`;
+	  // 3. 👇 这里是最适合的位置 👇
+  // 进入房间后隐藏导航栏中间的 cloudflare chatroom
+	  // const roomTitle = document.querySelector("#room-title");
+	  if (roomTitle) {
+		roomTitle.style.display = "none";
+	  }
+	  
+	  const roomStatusTitle = document.querySelector("#room-status-title");
+	  if (roomStatusTitle) {
+		// 把「已连接 房间名」加到标题前面
+		// roomStatusTitle.textContent = `已连接 ${roomname} 当前房间用户：`;
+		roomStatusTitle.textContent = ""; // 清空所有文字
+	  }
 
       document.location.hash = "#" + roomname;
       chatInput.focus();
@@ -744,10 +799,10 @@
     // 发送消息
     function sendMessage() {
       const message = chatInput.value.trim();
-      if (!message) {
-        alert("请输入消息内容！");
-        return;
-      }
+      if (!message || message === "undefined" || message === "null") {
+		alert("请输入消息内容！");
+		return;
+	  }
       if (!currentWebSocket || currentWebSocket.readyState !== WebSocket.OPEN) {
         alert("连接已断开，请重新进入房间！");
         return;
@@ -759,7 +814,8 @@
       console.log("发送消息:", message);
       
       currentWebSocket.send(JSON.stringify({
-        message: message
+        message: message,
+		name: username // 👇 新增
       }));
       
       chatInput.value = "";
@@ -783,6 +839,9 @@
 
       chatlog.innerHTML = "";
       isAtBottom = true;
+	  
+	  delete userFirstJoinTime[username]; 
+	  renderUserList();
       
       const wssProtocol = document.location.protocol === "https:" ? "wss://" : "ws://";
       const wsUrl = `${wssProtocol}${hostname}/api/room/${roomname}/websocket`;
@@ -795,7 +854,7 @@
         
         ws.onopen = () => {
           console.log("WebSocket 连接已打开");
-          connectStatus.style.display = "inline";
+          // connectStatus.style.display = "inline";
           const initMsg = JSON.stringify({ name: username });
           console.log("发送初始化消息:", initMsg);
           ws.send(initMsg);
@@ -838,20 +897,21 @@
               return;
             }
             
-            if (data.message && data.timestamp) {
-              if (data.timestamp > lastSeenTimestamp) {
-                const isSelf = data.name === username;
-                addChatMessage(
-                  isSelf ? "我" : data.name,
-                  data.message,
-                  false,
-                  isSelf
-                );
-                lastSeenTimestamp = data.timestamp;
-              }
-              return;
-            }
-            
+            if (data.message && data.timestamp && typeof data.message === "string" && data.message.trim()) {
+			  if (data.timestamp > lastSeenTimestamp) {
+				const userName = data.name ? data.name : "未知用户"; // 兜底name
+				const isSelf = userName === username;
+				addChatMessage(
+				  isSelf ? "我" : userName,
+				  data.message.trim(),
+				  false,
+				  isSelf
+				);
+				lastSeenTimestamp = data.timestamp;
+			  }
+			  return;
+			}
+						
             console.log("忽略非核心消息:", data);
             
           } catch (e) {
@@ -887,6 +947,16 @@
 
     // 添加消息到聊天窗口
     function addChatMessage(name, text, isSystem = false, isSelf = false) {
+		// 👇 新增过滤代码【放在这一行，函数开头第一行】
+	  if (text === undefined || text === null || text.trim() === "") {
+		console.log("忽略空/undefined消息");
+		return;
+	  }
+	  if (typeof text === "string" && text.toLowerCase() === "undefined") {
+		console.log("忽略'undefined'字符串消息");
+		return;
+	  }
+	  // 👆 新增结束
       console.log("添加消息:", { name, text, isSystem, isSelf });
       
       const msgDiv = document.createElement("div");
@@ -933,10 +1003,14 @@
 	
     // 页面关闭时清理连接
     window.addEventListener("beforeunload", () => {
-      if (currentWebSocket) {
-        currentWebSocket.close(1000, "页面关闭");
-      }
-    });
+	  if (currentWebSocket) {
+		// 👇 新增try-catch发送退出消息
+		try {
+		  currentWebSocket.send(JSON.stringify({ type: "quit", username: username }));
+		} catch (e) {}
+		currentWebSocket.close(1000, "页面关闭");
+	  }
+	});
   </script>
 </body>
 </html>
