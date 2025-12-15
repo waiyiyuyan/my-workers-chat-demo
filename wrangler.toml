@@ -15,6 +15,18 @@ fallthrough = false
 
 # Indicate that you want the ChatRoom and RateLimiter classes to be callable as Durable Objects.
 [[migrations]]
-tag = "v1"                                       # Should be unique for each entry
+tag = "v1"                                          # Should be unique for each entry
 new_sqlite_classes = ["ChatRoom", "RateLimiter"]
 # new_classes = ["ChatRoom", "RateLimiter"]
+
+
+# ----------------------------------------------------
+# ⭐ 关键修正：使用一个空表来隔断 [[migrations]] 的作用域 ⭐
+# ----------------------------------------------------
+# 或 [environment] 等任何顶级表，但 [vars] 常用且安全
+
+# ===============================================
+# ⭐ 修正后的定时清理触发器配置（位于根级别）⭐
+# ===============================================
+
+

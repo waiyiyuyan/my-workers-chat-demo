@@ -1,245 +1,305 @@
-// src/chat.mjs —— 2025年12月8日终极稳定版（已亲测秒发秒显 + 自动清理）
+// This is the Edge Chat Demo Worker, built using Durable Objects!
+
+// ===============================
+// Introduction to Modules
+// ===============================
 import HTML from "./chat.html";
 
+// `handleErrors()` utility
 async function handleErrors(request, func) {
   try {
     return await func();
   } catch (err) {
-    if (request.headers.get("Upgrade") === "websocket") {
+    if (request.headers.get("Upgrade") == "websocket") {
       let pair = new WebSocketPair();
       pair[1].accept();
-      pair[1].send(JSON.stringify({error: err.stack || String(err)}));
-      pair[1].close(1011, "Error");
+      pair[1].send(JSON.stringify({error: err.stack}));
+      pair[1].close(1011, "Uncaught exception during session setup");
       return new Response(null, { status: 101, webSocket: pair[0] });
+    } else {
+      return new Response(err.stack, {status: 500});
     }
-    return new Response(err.stack || "Error", {status: 500});
   }
 }
 
+// Main Worker export (fetch handler only, no need for scheduled)
 export default {
-  // 每天 UTC 04:00（北京时间中午12点）自动清空所有房间
-  async scheduled(event, env, ctx) {
-    const list = await env.rooms.list();
-    for (const key of list.keys) {
-      const id = env.rooms.idFromName(key.name);
-      const room = env.rooms.get(id);
-      await room.fetch("https://fake.host/clear-all-2025");
-    }
-  },
-
   async fetch(request, env) {
     return await handleErrors(request, async () => {
-      const url = new URL(request.url);
-      const path = url.pathname.slice(1).split('/');
+      let url = new URL(request.url);
+      let path = url.pathname.slice(1).split('/');
 
       if (!path[0]) {
         return new Response(HTML, {headers: {"Content-Type": "text/html;charset=UTF-8"}});
       }
 
-      if (path[0] === "api" && path[1] === "room") {
-        if (!path[2] && request.method === "POST") {
-          const id = env.rooms.newUniqueId();
-          return new Response(id.toString());
-        }
-        const name = path[2];
-        if (!name) return new Response("Bad Request", {status: 400});
-
-        const id = /^[0-9a-f]{64}$/.test(name)
-          ? env.rooms.idFromString(name)
-          : env.rooms.idFromName(name);
-
-        const room = env.rooms.get(id);
-        const newUrl = new URL(request.url);
-        newUrl.pathname = "/" + path.slice(3).join("/");
-        return room.fetch(newUrl, request);
+      switch (path[0]) {
+        case "api":
+          return handleApiRequest(path.slice(1), request, env);
+        default:
+          return new Response("Not found", {status: 404});
       }
-      return new Response("Not found", {status: 404});
     });
   }
-};
+}
 
+// API request handler
+async function handleApiRequest(path, request, env) {
+  switch (path[0]) {
+    case "room": {
+      if (!path[1]) {
+        if (request.method == "POST") {
+          let id = env.rooms.newUniqueId();
+          return new Response(id.toString(), {headers: {"Access-Control-Allow-Origin": "*"}});
+        } else {
+          return new Response("Method not allowed", {status: 405});
+        }
+      }
+
+      let name = path[1];
+      let id;
+      if (name.match(/^[0-9a-f]{64}$/)) {
+        id = env.rooms.idFromString(name);
+      } else if (name.length <= 32) {
+        id = env.rooms.idFromName(name);
+      } else {
+        return new Response("Name too long", {status: 404});
+      }
+
+      let roomObject = env.rooms.get(id);
+      let newUrl = new URL(request.url);
+      newUrl.pathname = "/" + path.slice(2).join("/");
+      return roomObject.fetch(newUrl, request);
+    }
+
+    default:
+      return new Response("Not found", {status: 404});
+  }
+}
+
+// ChatRoom Durable Object Class
 export class ChatRoom {
   constructor(state, env) {
-    this.state = state;
+    this.state = state
     this.storage = state.storage;
     this.env = env;
     this.sessions = new Map();
+    this.state.getWebSockets().forEach((webSocket) => {
+      let meta = webSocket.deserializeAttachment();
+      let limiterId = this.env.limiters.idFromString(meta.limiterId);
+      let limiter = new RateLimiterClient(
+        () => this.env.limiters.get(limiterId),
+        err => webSocket.close(1011, err.stack));
+      let blockedMessages = [];
+      this.sessions.set(webSocket, { ...meta, limiter, blockedMessages });
+    });
     this.lastTimestamp = 0;
   }
 
   async fetch(request) {
     return await handleErrors(request, async () => {
-      const url = new URL(request.url);
-
-      // 每日清理接口
-      if (url.pathname === "/clear-all-2025") {
-        await this.storage.deleteAll();
-        this.lastTimestamp = 0;
-        this.broadcast({ready: true});
-        return new Response("Room cleared");
-      }
-
-      if (url.pathname === "/websocket") {
-        if (request.headers.get("Upgrade") !== "websocket") {
-          return new Response("expected websocket", {status: 400});
+      let url = new URL(request.url);
+      switch (url.pathname) {
+        case "/websocket": {
+          if (request.headers.get("Upgrade") != "websocket") {
+            return new Response("expected websocket", {status: 400});
+          }
+          let ip = request.headers.get("CF-Connecting-IP");
+          let pair = new WebSocketPair();
+          await this.handleSession(pair[1], ip);
+          return new Response(null, { status: 101, webSocket: pair[0] });
         }
-
-        const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-        const pair = new WebSocketPair();
-        await this.handleSession(pair[1], ip);
-        return new Response(null, {status: 101, webSocket: pair[0]});
+        default:
+          return new Response("Not found", {status: 404});
       }
-
-      return new Response("Not found", {status: 404});
     });
   }
 
-  async handleSession(ws, ip) {
-    this.state.acceptWebSocket(ws);
+  async handleSession(webSocket, ip) {
+    this.state.acceptWebSocket(webSocket);
+    let limiterId = this.env.limiters.idFromName(ip);
+    let limiter = new RateLimiterClient(
+        () => this.env.limiters.get(limiterId),
+        err => webSocket.close(1011, err.stack));
+    let session = { limiterId, limiter, blockedMessages: [] };
+    webSocket.serializeAttachment({ ...webSocket.deserializeAttachment(), limiterId: limiterId.toString() });
+    this.sessions.set(webSocket, session);
 
-    // 防刷
-    const limiterId = this.env.limiters.idFromName(ip);
-    const limiter = new RateLimiterClient(
-      () => this.env.limiters.get(limiterId),
-      () => ws.close(1011, "Rate limited")
-    );
-
-    this.sessions.set(ws, {
-      name: null,
-      limiter,
-      blockedMessages: []
-    });
-
-    // 发送历史消息（最多300条）
-    const entries = await this.storage.list({reverse: true, limit: 300});
-    const messages = [...entries.values()].reverse();
-    messages.forEach(m => ws.send(m));
-  }
-
-async webSocketMessage(ws, message) {
-  const session = this.sessions.get(ws);
-  if (!session) return;
-
-  try {
-    const data = JSON. parse(message);
-
-    // 第一次发名字
-    if (data.name) {
-      const raw = "" + data.name;
-      const [displayName, uniqueId] = raw.split("##");
-      const safeName = (displayName || "匿名").slice(0, 32);
-      const sessionId = uniqueId || crypto.randomUUID();
-
-      session.displayName = safeName;
-      session.sessionId = sessionId;
-      ws.serializeAttachment({ sessionId });
-
-      session.blockedMessages.forEach(m => ws.send(m));
-      session.blockedMessages = null;
-
-      ws.send(JSON.stringify({ ready: true }));
-      this.broadcast({ joined: safeName });
-      return;
-    }
-
-    // ★ 关键：服务器端验证消息长度
-    if (data.message && data.message.length > 256) {
-      // ★ 发送错误给客户端（不是系统消息，是错误对象）
-      ws.send(JSON.stringify({ error: "消息过长，请分段发送" }));
-      return; // ★ 重要：return，不继续处理
-    }
-
-    // 发送消息
-    if (data.message && session.displayName && session.limiter.checkLimit()) {
-      const msgObj = {
-        name: `${session.displayName}##${session.sessionId}`,
-        message: ("" + data.message),
-        timestamp: Math.max(Date.now(), this.lastTimestamp + 1)
-      };
-
-      this.lastTimestamp = msgObj.timestamp;
-      const msgStr = JSON.stringify(msgObj);
-
-      this.broadcast(msgStr);
-
-      const keys = await this.storage.list({limit: 1000});
-      const toDelete = [... keys. keys()].sort().slice(0, -300);
-      if (toDelete.length) {
-        await Promise.all(toDelete.map(k => this.storage.delete(k)));
+    for (let otherSession of this.sessions.values()) {
+      if (otherSession.name) {
+        session.blockedMessages.push(JSON.stringify({joined: otherSession.name}));
       }
-      await this.storage.put(msgObj. timestamp. toString(), msgStr);
     }
 
-  } catch (e) {
-    console.error(e);
+    let storage = await this.storage.list({reverse: true, limit: 100});
+    let backlog = [...storage.values()];
+    backlog.reverse();
+    backlog.forEach(value => {
+      session.blockedMessages.push(value);
+    });
   }
-}
 
-  webSocketClose(ws) { this.cleanup(ws); }
-  webSocketError(ws) { this.cleanup(ws); }
+  async webSocketMessage(webSocket, msg) {
+    try {
+      let session = this.sessions.get(webSocket);
+      if (session.quit) {
+        webSocket.close(1011, "WebSocket broken.");
+        return;
+      }
 
-	cleanup(ws) {
-	  try {
-		const session = this.sessions.get(ws);
-		if (session?.displayName) {
-		  this.broadcast({ quit: session.displayName });
-		}
-		this.sessions.delete(ws);
-	  } catch (e) {
-		console.error("Cleanup error:", e);
-	  }
-	}
+      if (!session.limiter.checkLimit()) {
+        webSocket.send(JSON.stringify({
+          error: "Your IP is being rate-limited, please try again later."
+        }));
+        return;
+      }
+
+      let data = JSON.parse(msg);
+
+      if (!session.name) {
+        session.name = "" + (data.name || "anonymous");
+        webSocket.serializeAttachment({ ...webSocket.deserializeAttachment(), name: session.name });
+        if (session.name.length > 32) {
+          webSocket.send(JSON.stringify({error: "Name too long."}));
+          webSocket.close(1009, "Name too long.");
+          return;
+        }
+        session.blockedMessages.forEach(queued => {
+          webSocket.send(queued);
+        });
+        delete session.blockedMessages;
+        this.broadcast({joined: session.name});
+        webSocket.send(JSON.stringify({ready: true}));
+        return;
+      }
+
+      data = { name: session.name, message: "" + data.message };
+      if (data.message.length > 256) {
+        webSocket.send(JSON.stringify({error: "Message too long."}));
+        return;
+      }
+
+      data.timestamp = Math.max(Date.now(), this.lastTimestamp + 1);
+      this.lastTimestamp = data.timestamp;
+
+      let dataStr = JSON.stringify(data);
+      this.broadcast(dataStr);
+
+      // Save message
+      let key = new Date(data.timestamp).toISOString();
+      await this.storage.put(key, dataStr);
+
+      // ========== 核心修改：自动清理7天前的旧消息 ==========
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7天毫秒数
+      const sevenDaysAgoISO = new Date(sevenDaysAgo).toISOString(); // 转存储Key格式
+      // 读取7天前的所有旧消息
+      let oldMessages = await this.storage.list({end: sevenDaysAgoISO});
+      let oldKeys = [...oldMessages.keys()];
+      // 批量删除过期消息
+      if (oldKeys.length > 0) {
+        await Promise.all(oldKeys.map(key => this.storage.delete(key)));
+      }
+      // ====================================================
+
+    } catch (err) {
+      webSocket.send(JSON.stringify({error: err.stack}));
+    }
+  }
+
+  async closeOrErrorHandler(webSocket) {
+    let session = this.sessions.get(webSocket) || {};
+    session.quit = true;
+    this.sessions.delete(webSocket);
+    if (session.name) {
+      this.broadcast({quit: session.name});
+    }
+  }
+
+  async webSocketClose(webSocket, code, reason, wasClean) {
+    this.closeOrErrorHandler(webSocket)
+  }
+
+  async webSocketError(webSocket, error) {
+    this.closeOrErrorHandler(webSocket)
+  }
 
   broadcast(message) {
-    const str = typeof message === "string" ? message : JSON.stringify(message);
-    this.sessions.forEach((s, ws) => {
-      try {
-        if (s.blockedMessages) {
-          s.blockedMessages.push(str);
-        } else {
-          ws.send(str);
+    if (typeof message !== "string") {
+      message = JSON.stringify(message);
+    }
+    let quitters = [];
+    this.sessions.forEach((session, webSocket) => {
+      if (session.name) {
+        try {
+          webSocket.send(message);
+        } catch (err) {
+          session.quit = true;
+          quitters.push(session);
+          this.sessions.delete(webSocket);
         }
-      } catch (e) {}
+      } else {
+        session.blockedMessages.push(message);
+      }
+    });
+    quitters.forEach(quitter => {
+      if (quitter.name) {
+        this.broadcast({quit: quitter.name});
+      }
     });
   }
 }
 
-// 必须保留的 RateLimiter（和官方原版完全兼容）
+// RateLimiter Durable Object Class
 export class RateLimiter {
-  constructor() {
+  constructor(state, env) {
     this.nextAllowedTime = 0;
   }
+
   async fetch(request) {
-    const now = Date.now() / 1000;
-    this.nextAllowedTime = Math.max(now, this.nextAllowedTime);
-    if (request.method === "POST") this.nextAllowedTime += 5;
-    const cooldown = Math.max(0, this.nextAllowedTime - now - 20);
-    return new Response(cooldown);
+    return await handleErrors(request, async () => {
+      let now = Date.now() / 1000;
+      this.nextAllowedTime = Math.max(now, this.nextAllowedTime);
+      if (request.method == "POST") {
+        this.nextAllowedTime += 5;
+      }
+      let cooldown = Math.max(0, this.nextAllowedTime - now - 20);
+      return new Response(cooldown);
+    })
   }
 }
 
+// RateLimiterClient Class
 class RateLimiterClient {
-  constructor(getStub, onError) {
-    this.getStub = getStub;
-    this.onError = onError;
-    this.stub = getStub();
-    this.cooldown = false;
+  constructor(getLimiterStub, reportError) {
+    this.getLimiterStub = getLimiterStub;
+    this.reportError = reportError;
+    this.limiter = getLimiterStub();
+    this.inCooldown = false;
   }
+
   checkLimit() {
-    if (this.cooldown) return false;
-    this.cooldown = true;
-    this.apply();
+    if (this.inCooldown) {
+      return false;
+    }
+    this.inCooldown = true;
+    this.callLimiter();
     return true;
   }
-  async apply() {
+
+  async callLimiter() {
     try {
-      const resp = await this.stub.fetch("https://fake.host", {method: "POST"});
-      const wait = Number(await resp.text());
-      await new Promise(r => setTimeout(r, wait * 1000));
-      this.cooldown = false;
-    } catch (e) {
-      this.stub = this.getStub();
-      this.apply();
+      let response;
+      try {
+        response = await this.limiter.fetch("https://dummy-url", {method: "POST"});
+      } catch (err) {
+        this.limiter = this.getLimiterStub();
+        response = await this.limiter.fetch("https://dummy-url", {method: "POST"});
+      }
+      let cooldown = +(await response.text());
+      await new Promise(resolve => setTimeout(resolve, cooldown * 1000));
+      this.inCooldown = false;
+    } catch (err) {
+      this.reportError(err);
     }
   }
 }
