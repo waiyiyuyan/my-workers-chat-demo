@@ -129,9 +129,9 @@
     
     .form-input {
 	  display: block;
-	  width: 40%;
+	  width: 100%; /* 改为100%，继承容器宽度 */
 	  height: 45px;
-	  margin: 25px auto;
+	  margin: 25px 0; /* 仅上下间距，无左右auto */
 	  padding: 0 15px;
 	  font-size: 16px;
 	  border: 1px solid #ddd;
@@ -147,11 +147,20 @@
 	}
     
     #login-form p {
+	  /* 核心：固定定位到页面底部 */
+	  position: fixed;
+	  bottom: 20px; /* 距离页面底部20px，可按需调整 */
+	  left: 0;
+	  right: 0;
+	  /* 原有样式保留 */
 	  text-align: center;
 	  color: #515151;
 	  font-size: 14px;
-	  margin-top: 30px;
 	  line-height: 1.5;
+	  /* 移除原有margin-top，避免定位冲突 */
+	  margin: 0;
+	  /* 可选：增加z-index确保不被遮挡 */
+	  z-index: 100;
 	}
 
 	#login-form p a {
@@ -162,15 +171,15 @@
     
     #enter-room {
 	  display: block;
-	  width: 40%;
+	  width: 100px;
 	  height: 48px;
 	  line-height: 48px;
-	  margin: 15px auto;
-	  background: linear-gradient(135deg, #777777 0%, #555555 100%);
-	  color: #ffffff;
-	  border: 1.5px solid #666666; 
+	  margin: 15px 0 15px auto; /* 关键2：margin-left: auto 实现右对齐 */
+	  background: linear-gradient(to bottom, #a8d930 10%, #799f26 100%);
+	  color: #000;
+	  border: 1.5px solid #6b8f20; /* 边框匹配绿色系，可选 */
 	  border-radius: 8px;
-	  font-size: 17px;
+	  font-size: 16px;
 	  font-weight: 500;
 	  cursor: pointer;
 	  box-shadow: 
@@ -182,13 +191,13 @@
 	}
     
     #enter-room:active {
-	  background: linear-gradient(135deg, #666666 0%, #444444 100%);
+	  background: linear-gradient(to bottom, #9bc828 10%, #6d8f20 100%); /* 稍深的绿色 */
 	  box-shadow: 
 		inset 0 1px 3px rgba(0, 0, 0, 0.3),
 		inset 1px 0 3px rgba(0, 0, 0, 0.2),
 		inset -1px 0 3px rgba(0, 0, 0, 0.2),
 		inset 0 -1px 3px rgba(0, 0, 0, 0.1);
-	  border-color: #555555;
+	  border-color: #5d7f1a; /* 按下态边框稍深 */
 	}
 
     #chatroom {
@@ -313,7 +322,8 @@
 	  bottom: 0;
 	  left: 0;
 	  right: 0;
-	  height: 48px;
+	  height: auto;
+	  min-height: 48px; /* 保留最小高度，保证默认状态和原来一致 */
 	  background: linear-gradient(to bottom, #555555 0%, #333333 100%);
 	  padding: 4px 15px;
 	  display: flex;
@@ -324,9 +334,16 @@
     
     #chat-input {
 	  flex: 1;
-	  height: 38px; 
-	  max-height: 38px;
-	  padding: 2px 15px; 
+	  height: auto;
+	  min-height: 38px; 
+	  max-height: 120px; 
+	  
+	  /* 关键修复：统一行高+内边距+垂直对齐 */
+	  padding: 8px 15px; 
+	  line-height: 22px; /* 原34px改为22px，配合padding实现垂直居中 */
+	  display: flex; /* 新增：让内部文字垂直居中 */
+	  align-items: center; /* 新增：光标/文字垂直居中 */
+	  
 	  border: 1px solid #333333;
 	  border-radius: 8px;
 	  font-size: 15px;
@@ -337,19 +354,15 @@
 	  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15),
 				  inset 0 0 1px rgba(0, 0, 0, 0.05);
 	  overflow-y: auto;
-	  display: flex;
-	  align-items: center;
-	  justify-content: flex-start;
+	  
 	  font-family: "Ubuntu", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-	  line-height: 34px; 
+	  white-space: pre-wrap; 
 	}
 
 	#chat-input::placeholder {
 	  color: #999999;
-	  display: flex;
-	  align-items: center;
-	  height: 100%;
-	  line-height: 34px;
+	  line-height: 22px; /* 和输入框行高一致 */
+	  vertical-align: middle; /* 占位符文字垂直居中 */
 	}
 	
 	#chat-input:focus {
@@ -358,12 +371,13 @@
 	}
 	
 	#chat-input::-webkit-scrollbar {
-	  width: 0;
+	  width: 4px;
 	  height: 0;
 	}
 	
 	#chat-input::-webkit-scrollbar-thumb {
-	  display: none;
+	  background-color: rgba(0,0,0,0.2); /* 滚动条滑块样式 */
+	  border-radius: 2px;
 	}
     
     #send-btn {
@@ -379,11 +393,7 @@
 	  font-weight: 500;
 	  cursor: pointer;
 	  margin-left: 10px;
-	  box-shadow: 
-		0 1px 3px rgba(0, 0, 0, 0.2),
-		1px 0 3px rgba(0, 0, 0, 0.15),
-		-1px 0 3px rgba(0, 0, 0, 0.15),
-		0 -1px 3px rgba(0, 0, 0, 0.1);
+	  align-self: flex-end; /* 关键：按钮底部对齐，输入框增高时按钮不跑偏 */
 	  box-shadow: 
 		inset 0 0 1px rgba(255,255,255,0.2),
 		0 1px 3px rgba(0, 0, 0, 0.2),
@@ -403,20 +413,37 @@
 	}
     
     @media(max-width: 480px) {
-      .form-input {
-        width: 75%;
-      }
-      #enter-room {
-        width: 75%;
-      }
-      .msg-content {
-        max-width: 80%;
-      }
-      #copy-link {
-        width: 70px;
-        font-size: 13px;
-      }
-    }
+	  /* 新增：控制登录表单容器宽度，让输入框+按钮整体居中 */
+	  #login-form > div {
+		width: 75% !important; /* 匹配移动端输入框原75%宽度 */
+		margin: 0 auto !important; /* 整体居中 */
+	  }
+	  #login-form p {
+		bottom: 15px;
+		font-size: 14px; /* 移动端字体稍小 */
+		padding: 0 10px; /* 左右留白，避免文字贴边 */
+	  }
+	  
+	  .form-input {
+		width: 100%; /* 继承容器宽度，不再单独设75% */
+		margin: 25px 0; /* 仅上下间距，无左右auto */
+	  }
+	  
+	  #enter-room {
+		width: 100px !important; /* 固定缩短宽度（可改140/150px），替代原100% */
+		margin: 15px 0 15px auto !important; /* margin-left:auto实现右对齐，替代原15px 0 */
+		font-size: 16px; /* 适配移动端字体 */
+	  }
+	  
+	  .msg-content {
+		max-width: 80%;
+	  }
+	  
+	  #copy-link {
+		width: 70px;
+		font-size: 13px;
+	  }
+	}
 	
 	#tab-user-list.active, #tab-chat.active {
 	  background: #777;
@@ -434,14 +461,17 @@
   </div>
 
   <div id="login-form">
+  <!-- 容器新增class，方便精准控制样式 -->
+  <div class="login-container" style="width: 40%; margin: 0 auto;">
     <input id="name-input" class="form-input" placeholder="请输入你的昵称" 
            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <input id="room-name" class="form-input" placeholder="请输入房间名称" 
            autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
     <button id="enter-room" type="button">进入房间</button>
-    <p>本聊天室基于 Cloudflare Workers Durable Objects 构建<br>
-      <a href="https://blog.cloudflare.com/introducing-workers-durable-objects" target="_blank">了解更多</a>
-    </p>
+  </div>
+  <p>基于 Cloudflare Workers Durable Objects 构建<br>
+    <a href="https://blog.cloudflare.com/introducing-workers-durable-objects" target="_blank">了解更多</a>
+  </p>
   </div>
 
   <div id="chatroom">
@@ -467,7 +497,7 @@
 
   <!-- 选项卡绝对定位在父容器底部 -->
   <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; display: flex; background: #333; z-index: 100; border-top: 1px solid #222;">
-    <button id="tab-user-list" style="flex: 1; height: 100%; border: none; background: #555; color: #fff; font-size: 16px;">当前用户</button>
+    <button id="tab-user-list" style="flex: 1; height: 100%; border: none; background: #555; color: #fff; font-size: 16px;">用户</button>
     <button id="tab-chat" style="flex: 1; height: 100%; border: none; background: #444; color: #eee; font-size: 16px;">聊天</button>
   </div>
 </div>
@@ -498,6 +528,26 @@
     const connectStatus = document.querySelector("#connect-status");
     
     let hostname = window.location.host;
+	
+	// 自动调整输入框高度（修复删除不缩高问题）
+	// 自动调整输入框高度（修复删除不缩高+空输入框增高bug）
+	function adjustInputHeight() {
+	  // 新增：如果输入框内容为空，直接强制设为最小高度
+	  if (chatInput.value.trim() === "") {
+		chatInput.style.height = `${parseInt(getComputedStyle(chatInput).minHeight)}px`;
+		return; // 跳过后续计算
+	  }
+
+	  // 非空时执行原有逻辑
+	  chatInput.style.height = `${parseInt(getComputedStyle(chatInput).minHeight)}px`;
+	  setTimeout(() => {
+		const contentHeight = chatInput.scrollHeight;
+		const maxH = parseInt(getComputedStyle(chatInput).maxHeight);
+		const minH = parseInt(getComputedStyle(chatInput).minHeight);
+		const finalHeight = Math.min(Math.max(contentHeight, minH), maxH);
+		chatInput.style.height = `${finalHeight}px`;
+	  }, 0);
+	}
 
     // 链接转换
     function replaceUrlWithLink(text) {
@@ -531,12 +581,16 @@
     // 渲染用户列表
     function renderUserList() {
 	  if (!usersList) return;
-	  
 	  usersList.innerHTML = "";
 	  onlineUsers.forEach(user => {
 	  const li = document.createElement("li");
-	  li.style.padding = "8px 0";
-	  li.style.borderBottom = "1px solid #ccc";
+	  li.style.cssText = `
+	  padding: 8px 20px; /* 关键1：左右加内边距，内容向中间收 */
+      border-bottom: 1px solid #ccc;
+      display: flex;          /* 弹性布局 */
+      justify-content: space-between; /* 关键2：用around替代space-between，减少两端留白 */
+      align-items: center;    /* 垂直居中 */
+    `;
 		
 		// 👇 核心逻辑：仅在「首次显示该用户」时记录时间（固定值，永不改）
 		if (!userFirstJoinTime[user]) {
@@ -545,7 +599,10 @@
 		}
 		
 		// 👇 显示固定时间（一旦记录，永远是他自己的加入时间）
-		li.innerHTML = `${user} <span style="color:#999; font-size:12px; margin-left:8px;">(${userFirstJoinTime[user]})</span>`;
+		li.innerHTML = `
+		  <span style="color: #333;">${user}</span>  <!-- 用户名：主色（和原列表文字一致） -->
+		  <span style="color: #333; margin-left: 8px;">(${userFirstJoinTime[user]})</span> <!-- 时间：同色+右对齐 -->
+		`;
 		usersList.appendChild(li);
 	  });
 	  
@@ -694,25 +751,45 @@
       // 聊天输入框键盘事件
       chatInput.addEventListener("keydown", event => {
 	  // 仅保留：Enter（无论是否加shift）都只换行，不发送
-	  if (event.key === "Enter") {
-		event.preventDefault(); 
-		const start = chatInput.selectionStart;
-		const end = chatInput.selectionEnd;
-		chatInput.value = chatInput.value.substring(0, start) + "\n" + chatInput.value.substring(end);
-		chatInput.selectionStart = chatInput.selectionEnd = start + 1;
-	  } 
-	  // 保留上下翻页等快捷键（可选，不影响核心逻辑）
-	  else if (event.keyCode == 38) {
-		chatlog.scrollBy(0, -50);
-	  } else if (event.keyCode == 40) {
-		chatlog.scrollBy(0, 50);
-	  } else if (event.keyCode == 33) {
-		chatlog.scrollBy(0, -chatlog.clientHeight + 50);
-	  } else if (event.keyCode == 34) {
-		chatlog.scrollBy(0, chatlog.clientHeight - 50);
-	  }
-	});
-
+		  if (event.key === "Enter") {
+			event.preventDefault(); 
+			const start = chatInput.selectionStart;
+			const end = chatInput.selectionEnd;
+			chatInput.value = chatInput.value.substring(0, start) + "\n" + chatInput.value.substring(end);
+			chatInput.selectionStart = chatInput.selectionEnd = start + 1;
+			adjustInputHeight(); // 关键：回车后立即调整高度
+		  } 
+		  // 保留上下翻页等快捷键（可选，不影响核心逻辑）
+		  else if (event.keyCode == 38) {
+			chatlog.scrollBy(0, -50);
+		  } else if (event.keyCode == 40) {
+			chatlog.scrollBy(0, 50);
+		  } else if (event.keyCode == 33) {
+			chatlog.scrollBy(0, -chatlog.clientHeight + 50);
+		  } else if (event.keyCode == 34) {
+			chatlog.scrollBy(0, chatlog.clientHeight - 50);
+		  }
+		});
+		
+		// 🔥 核心修复：监听输入框内容变化（仅处理删除/换行，不处理普通字符）
+		chatInput.addEventListener("input", (e) => {
+		  const lineCount = (chatInput.value.match(/\n/g) || []).length;
+		  // 补充兼容：覆盖更多删除/退格的inputType场景
+		  const isDelete = ["deleteContentBackward", "deleteContentForward", "backspace", "delete"].includes(e.inputType);
+		  const isLineChange = lineCount !== chatInput.dataset.lastLineCount;
+		  
+		  if (isDelete || isLineChange) {
+			adjustInputHeight();
+		  }
+		  chatInput.dataset.lastLineCount = lineCount;
+		});
+		
+		chatInput.addEventListener("blur", adjustInputHeight);
+	// 内容变化时自动调整高度
+	 // chatInput.addEventListener("input", adjustInputHeight);
+	  // 页面加载时初始化高度
+	  // adjustInputHeight();
+	  
       // 发送按钮点击事件
       sendBtn.addEventListener("click", () => {
         sendMessage();
@@ -752,7 +829,7 @@
 		  chatInput.selectionStart = chatInput.selectionEnd = 0;
         });
       }
-
+	  chatInput.dataset.lastLineCount = (chatInput.value.match(/\n/g) || []).length;
       nameInput.focus();
     }
 
@@ -767,6 +844,9 @@
       chatroom.style.display = "none";
       backBtn.style.display = "block";
       copyLinkBtn.style.display = "block";
+	  
+	  adjustInputHeight();
+	  
 
       // 格式化房间名
       roomname = roomname
@@ -776,10 +856,6 @@
         .substring(0, 32);
       
       console.log("前端格式化后房间名:", roomname);
-      // roomTitle.textContent = `#${roomname}`;
-	  // 3. 👇 这里是最适合的位置 👇
-  // 进入房间后隐藏导航栏中间的 cloudflare chatroom
-	  // const roomTitle = document.querySelector("#room-title");
 	  if (roomTitle) {
 		roomTitle.style.display = "none";
 	  }
@@ -819,6 +895,7 @@
       }));
       
       chatInput.value = "";
+	  adjustInputHeight(); // 关键：发送后重置高度为默认
       chatlog.scrollBy(0, 1e8);
       isAtBottom = true;
 
