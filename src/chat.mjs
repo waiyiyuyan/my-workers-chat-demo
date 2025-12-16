@@ -80,7 +80,7 @@ async function handleApiRequest(path, request, env) {
 // ChatRoom Durable Object Class
 export class ChatRoom {
   constructor(state, env) {
-    this.state = state
+    this.state = state;
     this.storage = state.storage;
     this.env = env;
     this.sessions = new Map();
@@ -173,7 +173,12 @@ export class ChatRoom {
         return;
       }
 
-      data = { name: session.name, message: "" + data.message };
+      // data = { name: session.name, message: "" + data.message };
+	  data = {
+		...data, // 先继承前端发送的所有字段
+		name: session.name, // 强制使用会话中的用户名（防止伪造）
+		message: "" + data.message // 确保消息是字符串
+	  };
       if (data.message.length > 256) {
         webSocket.send(JSON.stringify({error: "Message too long."}));
         return;
@@ -190,15 +195,25 @@ export class ChatRoom {
       await this.storage.put(key, dataStr);
 
       // ========== 核心修改：自动清理7天前的旧消息 ==========
-      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000; // 7天毫秒数
-      const sevenDaysAgoISO = new Date(sevenDaysAgo).toISOString(); // 转存储Key格式
-      // 读取7天前的所有旧消息
-      let oldMessages = await this.storage.list({end: sevenDaysAgoISO});
-      let oldKeys = [...oldMessages.keys()];
-      // 批量删除过期消息
-      if (oldKeys.length > 0) {
-        await Promise.all(oldKeys.map(key => this.storage.delete(key)));
-      }
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+		const sevenDaysAgoISO = new Date(sevenDaysAgo).toISOString();
+		let oldMessages = await this.storage.list({end: sevenDaysAgoISO});
+		let oldKeys = [...oldMessages.keys()];
+		// 优化：分批次删除（每批10条），避免一次性删除过多阻塞
+		if (oldKeys.length > 0) {
+		  const batchSize = 10;
+		  for (let i = 0; i < oldKeys.length; i += batchSize) {
+			const batch = oldKeys.slice(i, i + batchSize);
+			// ✅ 新增：捕获单条删除错误，不影响整批
+			await Promise.all(batch.map(async (key) => {
+			  try {
+				await this.storage.delete(key);
+			  } catch (err) {
+				console.error(`删除旧消息失败: ${key}`, err);
+			  }
+			}));
+		  }
+		}
       // ====================================================
 
     } catch (err) {
@@ -224,6 +239,10 @@ export class ChatRoom {
   }
 
   broadcast(message) {
+	if (!message || (typeof message === "string" && message.trim() === "")) {
+		console.warn("忽略空消息广播");
+		return;
+    }
     if (typeof message !== "string") {
       message = JSON.stringify(message);
     }
@@ -252,17 +271,26 @@ export class ChatRoom {
 // RateLimiter Durable Object Class
 export class RateLimiter {
   constructor(state, env) {
+    this.state = state; // ✅ 新增：绑定state
     this.nextAllowedTime = 0;
   }
 
   async fetch(request) {
     return await handleErrors(request, async () => {
+      // ✅ 新增：从持久化存储读取（重启后不丢失）
+      let stored = await this.state.storage.get("nextAllowedTime");
+      this.nextAllowedTime = stored || 0;
+
       let now = Date.now() / 1000;
       this.nextAllowedTime = Math.max(now, this.nextAllowedTime);
       if (request.method == "POST") {
         this.nextAllowedTime += 5;
       }
       let cooldown = Math.max(0, this.nextAllowedTime - now - 20);
+      
+      // ✅ 新增：持久化存储
+      await this.state.storage.put("nextAllowedTime", this.nextAllowedTime);
+      
       return new Response(cooldown);
     })
   }

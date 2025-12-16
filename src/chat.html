@@ -2,7 +2,14 @@
 <html>
 <head>
   <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500&display=swap" rel="stylesheet">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover, height=device-height">
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <script>
+    // 修复：增加跳转判断，避免无限循环
+    if (location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      location.href = 'https:' + window.location.href.substring(window.location.protocol.length);
+    }
+  </script>
   
   <style type="text/css">
     * {
@@ -31,9 +38,11 @@
       font-weight: 500;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       z-index: 100;
-      position: relative; 
       text-align: center;
       line-height: 44px;
+	  transform: translateZ(0); /* 开启硬件加速，防止定位偏移 */
+	  -webkit-transform: translateZ(0);
+	  will-change: position; /* 告诉浏览器优化定位 */
     }
 
 	#back-btn, #copy-link {
@@ -191,8 +200,8 @@
 	}
     
     #enter-room:active {
-	  background: linear-gradient(to bottom, #9bc828 10%, #6d8f20 100%); /* 稍深的绿色 */
-	  box-shadow: 
+      background: linear-gradient(to bottom, #9bc828 10%, #6d8f20 100%); /* 稍深的绿色 */
+      box-shadow: 
 		inset 0 1px 3px rgba(0, 0, 0, 0.3),
 		inset 1px 0 3px rgba(0, 0, 0, 0.2),
 		inset -1px 0 3px rgba(0, 0, 0, 0.2),
@@ -202,12 +211,11 @@
 
     #chatroom {
 	  position: fixed;
-	  top: 0;
+	  top: 44px; /* 直接定位到导航栏下方，替代 padding-top */
 	  left: 0;
 	  right: 0;
 	  bottom: 0;
-	  padding-top: 44px;
-	  padding-bottom: 48px;
+	  padding-bottom: 48px; /* 仅保留底部内边距 */
 	  display: none;
 	  box-sizing: border-box;
 	}
@@ -251,6 +259,8 @@
 	  line-height: 1.5;
 	  word-wrap: break-word;
 	  position: relative;
+	  overflow: hidden;
+	  position: relative;
 	}
 	
 	.msg .bubble a {
@@ -280,7 +290,7 @@
               0 2px 4px rgba(0, 0, 0, 0.2), 
               -1px 1px 4px rgba(0, 0, 0, 0.15);
 	  position: relative;
-	  overflow: visible;
+	  overflow: hidden;
 	}
 	
 	.msg.right .bubble {
@@ -291,7 +301,7 @@
              0 2px 4px rgba(0, 0, 0, 0.2), 
              -1px 1px 4px rgba(0, 0, 0, 0.15);
 	  position: relative;
-	  overflow: visible;
+	  overflow: hidden;
 	}
     
     .msg .username {
@@ -337,13 +347,11 @@
 	  height: auto;
 	  min-height: 38px; 
 	  max-height: 120px; 
-	  
 	  /* 关键修复：统一行高+内边距+垂直对齐 */
 	  padding: 8px 15px; 
 	  line-height: 22px; /* 原34px改为22px，配合padding实现垂直居中 */
 	  display: flex; /* 新增：让内部文字垂直居中 */
 	  align-items: center; /* 新增：光标/文字垂直居中 */
-	  
 	  border: 1px solid #333333;
 	  border-radius: 8px;
 	  font-size: 15px;
@@ -354,7 +362,6 @@
 	  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.15),
 				  inset 0 0 1px rgba(0, 0, 0, 0.05);
 	  overflow-y: auto;
-	  
 	  font-family: "Ubuntu", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
 	  white-space: pre-wrap; 
 	}
@@ -443,6 +450,34 @@
 		width: 70px;
 		font-size: 13px;
 	  }
+	  /* 👇 新增这部分 */
+	  [for="image-upload"] {
+		margin-left: 4px !important;
+		margin-right: 8px !important;
+		width: 34px !important;
+		height: 34px !important;
+	  }
+	  [for="image-upload"] svg {
+		width: 28px !important;
+		height: 28px !important;
+	  }
+	  /* 用户列表头像适配移动端 */
+	  .user-avatar {
+		width: 18px !important;
+		height: 20px !important;
+	  }
+	  
+	  #image-upload {
+		-webkit-appearance: none;
+		appearance: none;
+	  }
+	  
+	  label[for="image-upload"] {
+		touch-action: none; /* 禁用浏览器默认触摸行为 */
+		-webkit-touch-callout: none; /* 禁用iOS长按菜单 */
+		-webkit-tap-highlight-color: transparent; /* 移除iOS点击高亮 */
+		cursor: pointer;
+	  }
 	}
 	
 	#tab-user-list.active, #tab-chat.active {
@@ -451,9 +486,17 @@
 	  font-weight: 500;
 	}
 	
-	.msg .bubble img {
-	  max-width: 100%; /* 限制图片不超过气泡宽度 */
-	  height: auto;    /* 保持宽高比 */
+	label[for="image-upload"]:active {
+	  background: linear-gradient(135deg, #666666 0%, #444444 100%);
+	  opacity: 0.9;
+	}
+	
+	/* 新增：用户头像样式 */
+	.user-avatar {
+	  width: 22px;
+	  height: 24px;
+	  margin-right: 8px;
+	  flex-shrink: 0; /* 防止头像被压缩 */
 	}
   </style>
 </head>
@@ -498,6 +541,7 @@
 		box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 		vertical-align: bottom;
 		padding: 0;
+		touch-action: manipulation; /* 优化移动端触摸事件 */
 	  ">
 		<!-- 2. 放大 SVG 图标尺寸（从 20x20 改为 28x28，占满 38x38 按钮的大部分） -->
 	  <svg width="36" height="36" viewBox="0 0 24 24" fill="#ffffff">
@@ -505,10 +549,13 @@
 		<path d="M14 10c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" opacity=".3"/>
 	  </svg>
 	  </label>
-	  <input type="file" id="image-upload" accept="image/*" style="display: none;">
+	  
+	  <input type="file" id="image-upload" 
+       accept="image/jpeg,image/png,image/gif,image/webp" 
+       multiple="false" 
+       style="display: none;">
 	<!-- 图片区 -->
-      <textarea id="chat-input" placeholder="请输入消息..." 
-         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+      <textarea id="chat-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
       <button id="send-btn" type="button">发送</button>
     </div>
   </div>
@@ -533,7 +580,6 @@
 </div>
 
   <script type="text/javascript">
-	
     let currentWebSocket = null;
     let username;
     let userListPage, tabUserList, tabChat, usersList;
@@ -542,7 +588,7 @@
     let lastSeenTimestamp = 0;
     let wroteWelcomeMessages = false;
     let onlineUsers = [];
-	let userFirstJoinTime = {}; 
+	let sentImageMsgIds = new Set(); // ✅ 必加
 
     // DOM 选择器
     const loginForm = document.querySelector("#login-form");
@@ -558,21 +604,21 @@
     const copyLinkBtn = document.querySelector("#copy-link");
     const connectStatus = document.querySelector("#connect-status");
 	// 图片区
-	const imageUpload = document.querySelector("#image-upload"); // 新增：图片上传input
-	let pendingImageUrl = ""; // 新增：暂存待发送的图片URL
+	const imageUpload = document.querySelector("#image-upload");
+	const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+	const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     // 图片区
     let hostname = window.location.host;
 	
-	// 自动调整输入框高度（修复删除不缩高问题）
-	// 自动调整输入框高度（修复删除不缩高+空输入框增高bug）
+	// ========== 输入框高度调整 ==========
 	function adjustInputHeight() {
-	  // 新增：如果输入框内容为空，直接强制设为最小高度
+	  // 空值强制重置最小高度，修复删除内容不缩高问题
 	  if (chatInput.value.trim() === "") {
 		chatInput.style.height = `${parseInt(getComputedStyle(chatInput).minHeight)}px`;
-		return; // 跳过后续计算
+		return;
 	  }
 
-	  // 非空时执行原有逻辑
+	  // 保留原有逻辑
 	  chatInput.style.height = `${parseInt(getComputedStyle(chatInput).minHeight)}px`;
 	  setTimeout(() => {
 		const contentHeight = chatInput.scrollHeight;
@@ -583,200 +629,271 @@
 	  }, 0);
 	}
 	
-	// 图片区
-	async function uploadToImageBed(file) {
-		//return "https://picsum.photos/200/200";
-	
-	  // Imgur 匿名上传API（无需注册，支持跨域）
-	  const uploadUrl = "https://img.cetsteam.com/upload/ftp";
-	  
-	  if (!file.type.startsWith("image/")) {
-		throw new Error("仅支持图片文件上传！");
-	  }
-	  // 接口无明确大小限制，可根据需要添加（比如 10MB）
-	  if (file.size > 10 * 1024 * 1024) {
-		throw new Error("图片大小不能超过10MB！");
-	  }
-	  // Imgur 公共匿名Client ID（可直接使用）
-	  // const clientId = "Client-ID 8c9787969c5859c";
-	  
-	  const formData = new FormData();
-	  formData.append("file", file);
-	  
-	  try {
-		const response = await fetch(uploadUrl, {
-		  method: "POST",
-		  headers: {
-			// 接口允许跨域，无需额外鉴权头，浏览器自动处理 Content-Type
-			"Accept": "application/json",
-			// 不要手动设置 Content-Type，否则会丢失 boundary 分隔符
-		  },
-		  body: formData
+
+// 传图开始
+async function uploadToImageBed(file) {
+  // 🔥 核心修改：替换为你自己的 Cloudflare Workers 代理域名
+  // 格式示例：https://你的worker名称.你的cloudflare用户名.workers.dev/temp-upload
+  const UPLOAD_URL = "https://image.lovefree.de5.net/temp-upload";
+
+  // 1. 校验文件类型
+  if (!file.type.startsWith("image/")) {
+    throw new Error("仅支持图片文件上传！");
+  }
+
+  // 2. 限制文件大小（建议 10MB 内）
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  if (file.size > MAX_SIZE) {
+    throw new Error(`图片大小不能超过${MAX_SIZE / 1024 / 1024}MB！`);
+  }
+
+  try {
+    // 3. 构建 FormData（仅保留核心 image 字段）
+    const formData = new FormData();
+    formData.append("image", file); // 仅传这个字段，和原站一致
+
+    // 4. 发送请求到 CF 代理（无需加任何 Origin/Referer，代理会处理）
+    const response = await fetch(UPLOAD_URL, {
+      method: "POST",
+      body: formData,          // 直接传 FormData
+      credentials: "omit",     // 匿名上传
+      cache: "no-store",       // 禁用缓存
+      mode: "cors",            // 跨域请求（代理已配置 CORS）
+      timeout: 90000           // 30秒超时
+    });
+
+    // 5. 校验响应状态
+    if (!response.ok) {
+      const errText = await response.text().catch(() => "无具体错误信息");
+      throw new Error(`上传失败，状态码：${response.status}，详情：${errText}`);
+    }
+
+    // 6. 解析代理返回的 JSON 响应
+    const result = await response.json();
+    if (result.code === 200 && result.msg === "success" && result.data?.url) {
+      // 返回代理转发后拿到的有效图片链接
+      return result.data.url;
+    } else {
+      throw new Error(`图床返回异常：${result.msg || "未生成有效链接"}`);
+    }
+  } catch (err) {
+    console.error("CF代理上传失败:", err);
+    
+    let errMsg = err.message;
+    if (err.message.includes("NetworkError") || err.message.includes("Failed to fetch")) {
+      errMsg = "网络错误！请检查CF代理域名是否正确";
+    } else if (err.message.includes("cors") || err.message.includes("跨域")) {
+      errMsg = "CF代理未正确配置CORS！请检查代理代码";
+    }
+
+    throw new Error(`上传失败：${errMsg}`);
+  }
+}
+// 传图结束
+	// 传图结束
+
+	// ========== 图片选择事件：仿微信直接发送图片气泡 ==========
+	if (imageUpload) {
+		let isUploading = false; // 增加上传锁，避免重复触发
+		imageUpload.addEventListener("change", async (e) => {
+			// 1. 校验是否有文件被选择
+			const files = e.target.files;
+			if (!files || files.length === 0) {
+				console.log("未选择任何文件，跳过上传");
+				return;
+			}
+			const file = files[0];
+			
+			// 2. 防止重复上传
+			if (isUploading) return;
+			isUploading = true;
+
+			try {
+				let fileType = file.type;
+				if (!fileType && file.name) {
+					const ext = file.name.split('.').pop().toLowerCase();
+					fileType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+				}
+				  
+				if (!fileType.startsWith("image/")) {
+					alert("请选择图片文件（JPG/PNG/GIF等）！");
+					isUploading = false;
+					imageUpload.value = ""; // 清空选择器
+					return;
+				}
+
+				// 3. 创建图片上传中的气泡（自己的消息）
+				const loadingMsgId = `img-loading-${Date.now()}`;
+				addChatMessage("我", "图片上传中...", false, true);
+				const loadingBubble = chatlog.lastChild?.querySelector(".bubble");
+				if (loadingBubble) {
+					loadingBubble.dataset.msgId = loadingMsgId;
+				}
+
+				try {
+					// 4. 上传图片
+					const imageUrl = await uploadToImageBed(file);
+					
+					// 5. 上传成功：更新气泡内容为图片链接
+					if (loadingBubble) {
+						loadingBubble.innerHTML = formatMessageText(imageUrl);
+						// loadingBubble.innerHTML = `<a href="${imageUrl}" target="_blank">${imageUrl}</a>`;
+					}
+					
+					// 6. 发送图片链接到聊天室
+					if (currentWebSocket && currentWebSocket.readyState === WebSocket.OPEN) {
+						sentImageMsgIds.add(loadingMsgId); // ✅ 必加
+					  currentWebSocket.send(JSON.stringify({
+						message: imageUrl,
+						name: username,
+						isImage: true, // 标记这是图片消息
+						msgId: loadingMsgId // 携带本地创建的唯一ID
+					  }));
+					}
+				} catch (err) {
+					// 7. 上传失败：更新气泡内容为错误提示
+					if (loadingBubble) {
+						loadingBubble.textContent = err.message;
+					}
+					// sentImageMsgIds.delete(loadingMsgId);
+					sentImageMsgIds.delete(loadingMsgId); // ✅ 确保失败时也删除
+				}
+			} finally {
+				// 8. 重置状态和文件选择器
+				imageUpload.value = ""; 
+				isUploading = false;
+			}
 		});
-
-		if (!response.ok) {
-		  throw new Error(`上传失败，状态码：${response.status}`);
-		}
-
-		const result = await response.json();
-		// 校验接口返回的成功状态
-		if (result.code === 200 && result.url) {
-		  // 返回原图 URL（也可以选 thumbnail_url 缩略图）
-		  return result.url;
-		} else {
-		  throw new Error(result.message || "图片上传失败，接口返回异常");
-		}
-	  } catch (err) {
-		console.error("cetsteam 图床上传失败:", err);
-		throw new Error(`上传失败：${err.message}`);
-	  }
+	}
+	
+	// ========== 移动端图片按钮兼容 ==========
+	const imageUploadLabel = document.querySelector('label[for="image-upload"]');
+	if (imageUploadLabel) {
+	  const triggerFileInput = () => {
+		// 先清空文件选择器，避免残留状态
+		imageUpload.value = "";
+		// 延迟触发，适配移动端事件循环
+		setTimeout(() => {
+		  document.querySelector('#image-upload').click();
+		}, 0);
+	  };
 	  
+	  imageUploadLabel.addEventListener('click', (e) => {
+		e.preventDefault();
+		e.stopPropagation();
+		triggerFileInput();
+	  });
+	  
+	  if (isMobile) {
+		imageUploadLabel.addEventListener('touchstart', (e) => {
+		  e.preventDefault();
+		  e.stopPropagation();
+		  triggerFileInput();
+		}, { passive: false }); // 强制被动为false，确保能阻止默认行为
+		
+		// 增加touchend事件防护，避免重复触发
+		imageUploadLabel.addEventListener('touchend', (e) => {
+		  e.preventDefault();
+		  e.stopPropagation();
+		}, { passive: false });
+	  }
 	}
 
-	// 新增：监听图片选择事件
-	if (imageUpload) {
-	  imageUpload.addEventListener("change", async (e) => {
-		const file = e.target.files[0];
-		if (!file) return;
-		
-		// 校验图片类型和大小
-		if (!file.type.startsWith("image/")) {
-		  alert("请选择图片文件（JPG/PNG/GIF等）！");
-		  return;
-		}
-		
-
-		try {
-		  // 上传图片到图床，获取URL
-		  pendingImageUrl = await uploadToImageBed(file);
-		  if (chatInput) chatInput.placeholder = "已选图片，点击发送";
-		  // alert("图片上传成功，可点击发送！");
-		  imageUpload.value = "";
-		} catch (err) {
-		  alert(err.message);
-		  pendingImageUrl = "";
-		  imageUpload.value = ""; // 新增：清空文件输入框（可选）
-		}
+    // ========== 极简的消息处理：仅换行和链接转可点击 ==========
+	/*
+	function formatMessageText(text) {
+	  // 第一步：替换换行符
+	  let formattedText = text.replace(/\n/g, "<br>");
+	  // 第二步：匹配所有HTTP/HTTPS链接（包括图片链接），转成可点击的文本链接
+	  const urlRegex = /(https?:\/\/[^\s]+)/g;
+	  formattedText = formattedText.replace(urlRegex, (url) => {
+		// 只返回纯链接文本（点击可跳转），无任何图片标签
+		return `<a href="${encodeURI(url)}" target="_blank" style="color: #0066cc; word-break: break-all;">${url}</a>`;
 	  });
-	  }
-
-	// 图片区
-
-    // 链接转换
-    function replaceUrlWithLink(text) {
-	  
-      text = text.replace(/\n/g, "<br>");
-	  // 图片区
-	  
-	  // const imgUrlRegex = /(https?:\/\/picsum\.photos\/\d+\/\d+)|(https?:\/\/.*\.(png|jpg|jpeg|gif|bmp|webp|svg)(\?.*)?)/gi;
-	  const imgDomains = ['picsum.photos', 'placehold.co', 'placekitten.com']; // 常见无后缀图片域名
-	  const imgExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg']; // 图片后缀
-      const urlRegex = /https?:\/\/[^\s]+/gi; // 匹配所有HTTP/HTTPS链接
-	  
-	  let processedText = text.replace(urlRegex, (url) => {
-		// 判断是否是图片URL：要么包含图片域名，要么后缀是图片格式
-		const isImgDomain = imgDomains.some(domain => url.includes(domain));
-		const isImgExt = imgExtensions.some(ext => url.toLowerCase().endsWith(`.${ext}`) || url.toLowerCase().includes(`.${ext}?`));
-
-		if (isImgDomain || isImgExt) {
-		  // 是图片URL，转成img标签
-		  return `<img src="${url}" style="max-width: 200px; max-height: 200px; border-radius: 4px; cursor: pointer;" onclick="previewImg('${url}')">`;
-		} else {
-		  // 普通URL，转成a标签
-		  return `<a href="${url}" target="_blank" style="color: #0066cc; text-decoration: underline;">${url}</a>`;
-		}
+	  return formattedText;
+	}
+	*/
+	function formatMessageText(text) {
+	  // 第一步：先清理文本中的多余引号（避免干扰正则）
+	  let formattedText = text.replace(/"/g, "").replace(/\n/g, "<br>");
+	  // 1. 匹配图片链接（严格排除特殊字符，避免语法错误）
+	  const imgRegex = /(https?:\/\/[^\s"'><]+\.(jpg|jpeg|png|gif|webp))/gi;
+	  formattedText = formattedText.replace(imgRegex, (url) => {
+	  const encodedUrl = encodeURI(url);
+		// 用单引号包裹属性，避免和双引号冲突；标签完整闭合
+		return `
+		  <!-- 仅图片容器限制最大宽度，文字气泡不变 -->
+		  <div style='max-width: 200px; /* 图片气泡最大200px宽 */
+					  margin: 4px auto; /* 居中，上下留白 */
+					  text-align: center;'>
+			<img 
+			  src='${encodedUrl}' 
+			  style='width: 100%; 
+					 max-height: 200px; 
+					 border-radius: 6px; 
+					 cursor: pointer; 
+					 border: 0.5px solid #f5f5f5;
+					 box-shadow: 0 1px 2px rgba(0,0,0,0.05);' 
+			  alt='图片预览'
+			  onclick='window.open("${encodedUrl}", "_blank")'
+			  onError='this.style.display="none"; this.nextElementSibling.style.display="block"'
+			>
+			<div style='display: none; font-size: 14px; color: #0066cc; cursor: pointer; padding: 8px;'
+				 onclick='window.open("${encodedUrl}", "_blank")'>
+			  点击查看图片
+			</div>
+		  </div>
+		`;
 	  });
-	  // 图片区
-      // const protocolUrlRegex = /((https?:\/\/|ftps?:\/\/)[^\s]+)/gi; // 图片区
-      const domainUrlRegex = /(^|\s)([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}([\/\?\&=\%#-\w]*)(?=\s|$)/gi;
-      const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
-      const telRegex = /(tel:[\d-]+|[\d-]{7,15})/gi;
-	 /*
-      processedText = text.replace(protocolUrlRegex, (url) => {
-        return `<a href="${url}" target="_blank" style="color: #0066cc; text-decoration: underline;">${url}</a>`;
-      });
-		*/
-      processedText = processedText.replace(domainUrlRegex, (match, prefix, domain, path) => {
-        const fullUrl = `https://${domain}${path || ''}`;
-        return `${prefix}<a href="${fullUrl}" target="_blank" style="color: #0066cc; text-decoration: underline;">${domain}${path || ''}</a>`;
-      });
-
-      processedText = processedText.replace(emailRegex, (email) => {
-        return `<a href="mailto:${email}" style="color: #0066cc; text-decoration: underline;">${email}</a>`;
-      });
-
-      processedText = processedText.replace(telRegex, (tel) => {
-        const telHref = tel.startsWith('tel:') ? tel : `tel:${tel}`;
-        return `<a href="${telHref}" style="color: #0066cc; text-decoration: underline;">${tel}</a>`;
-      });
-	  /*
-	  processedText = processedText.replace(new RegExp(`${imgMarker}(\\d+)${imgMarker}`, 'gi'), (_, index) => {
-		const imgUrl = imgUrls[parseInt(index)];
-		return `<img src="${imgUrl}" style="max-width: 200px; max-height: 200px; border-radius: 4px; cursor: pointer;" onclick="previewImg('${imgUrl}')">`;
+	  
+	  // 2. 处理普通链接（排除已被图片处理的链接）
+	  const urlRegex = /(https?:\/\/[^\s"'><]+)(?![^<]*>)/g;
+	  formattedText = formattedText.replace(urlRegex, (url) => {
+		return `<a href='${encodeURI(url)}' target='_blank' style='color: #0066cc; word-break: break-all;'>${url}</a>`;
 	  });
-	  */
-      return processedText;
-    }
-	
-	// 图片区
-	window.previewImg = function(url) {
-	  const modal = document.createElement("div");
-	  modal.style = `
-		position: fixed;
-		top: 0; left: 0; right: 0; bottom: 0;
-		background: rgba(0,0,0,0.8);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		z-index: 9999;
-		padding: 20px;
-	  `;
-	  modal.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
-	  modal.onclick = () => modal.remove();
-	  modal.querySelector("img").onclick = (e) => e.stopPropagation();
-	  document.body.appendChild(modal);
-	};
-	// 图片区
-    // 渲染用户列表
-    function renderUserList() {
+	  
+	  return formattedText;
+	}
+
+    // ========== 用户列表渲染（核心修改：添加头像） ==========
+	function renderUserList() {
 	  if (!usersList) return;
 	  usersList.innerHTML = "";
+	  
+	  if (onlineUsers.length === 0) {
+		usersList.innerHTML = "<li style='padding: 8px 20px; color: #666; display: flex; align-items: center;'><svg class='user-avatar' width='22' height='24' viewBox='0 0 512 512' fill='#666' xmlns='http://www.w3.org/2000/svg'><path d='M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z'/><path d='M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z'/></svg>当前暂无在线用户</li>";
+		return;
+	  }
+	  
 	  onlineUsers.forEach(user => {
-	  const li = document.createElement("li");
-	  li.style.cssText = `
-	  padding: 8px 20px; /* 关键1：左右加内边距，内容向中间收 */
-      border-bottom: 1px solid #ccc;
-      display: flex;          /* 弹性布局 */
-      justify-content: space-between; /* 关键2：用around替代space-between，减少两端留白 */
-      align-items: center;    /* 垂直居中 */
-    `;
-		
-		// 👇 核心逻辑：仅在「首次显示该用户」时记录时间（固定值，永不改）
-		if (!userFirstJoinTime[user]) {
-		  const joinTime = new Date(); // 该用户首次出现的时间=他的加入时间
-		  userFirstJoinTime[user] = `${joinTime.getFullYear()}-${String(joinTime.getMonth()+1).padStart(2, '0')}-${String(joinTime.getDate()).padStart(2, '0')} ${String(joinTime.getHours()).padStart(2, '0')}:${String(joinTime.getMinutes()).padStart(2, '0')}:${String(joinTime.getSeconds()).padStart(2, '0')}`;
-		}
-		
-		// 👇 显示固定时间（一旦记录，永远是他自己的加入时间）
+		const li = document.createElement("li");
+		li.style.cssText = `
+		  padding: 8px 20px;
+		  border-bottom: 1px solid #ccc;
+		  display: flex;
+		  align-items: center;
+		  justify-content: space-between;
+		`;
+		// 核心：添加头像SVG + 用户名
 		li.innerHTML = `
-		  <span style="color: #333;">${user}</span>  <!-- 用户名：主色（和原列表文字一致） -->
-		  <span style="color: #333; margin-left: 8px;">(${userFirstJoinTime[user]})</span> <!-- 时间：同色+右对齐 -->
+		  <div style="display: flex; align-items: center;">
+			<svg class="user-avatar" width="22" height="24" viewBox="0 0 512 512" fill="#333333" xmlns="http://www.w3.org/2000/svg">
+			  <path d="M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z"/>
+			  <path d="M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z"/>
+			</svg>
+			<span style="color: #333;">${user}</span>
+		  </div>
 		`;
 		usersList.appendChild(li);
 	  });
-	  
-	  if (onlineUsers.length === 0) {
-		usersList.innerHTML = "<li style='padding: 8px 0; color: #666;'>当前暂无在线用户</li>";
-	  }
 	}
 
-    // 初始化登录表单
+    // ========== 初始化登录表单 ==========
     function initLoginForm() {
       roomTitle.textContent = "cloudflare chatroom";
       backBtn.style.display = "none";
       copyLinkBtn.style.display = "none";
 
-      // 从URL哈希加载房间名
       if (window.location.hash) {
         const hashRoomName = window.location.hash.slice(1);
         if (hashRoomName) {
@@ -784,7 +901,6 @@
         }
       }
 
-      // 进入房间按钮点击
       enterRoomButton.addEventListener("click", () => {
         username = nameInput.value.trim();
         roomname = roomNameInput.value.trim();
@@ -801,21 +917,18 @@
         startChat();
       });
 
-      // 昵称输入框长度限制
       nameInput.addEventListener("input", event => {
         if (event.currentTarget.value.length > 32) {
           event.currentTarget.value = event.currentTarget.value.slice(0, 32);
         }
       });
       
-      // 房间名输入框长度限制
       roomNameInput.addEventListener("input", event => {
         if (event.currentTarget.value.length > 32) {
           event.currentTarget.value = event.currentTarget.value.slice(0, 32);
         }
       });
       
-      // 昵称输入框回车事件
       nameInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -828,7 +941,6 @@
         }
       });
 
-      // 房间名输入框回车事件
       roomNameInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -836,32 +948,24 @@
         }
       });
 
-      // 返回按钮点击事件
       backBtn.addEventListener("click", () => {
-	  // 1. 判断当前是否显示聊天页
 	  if (chatroom.style.display === "block") {
-		// 聊天页 → 切到用户列表页（不退出、不关闭连接）
 		chatroom.style.display = "none";
 		userListPage.style.display = "block";
-		// 选中「当前用户」选项卡
 		tabUserList.classList.add("active");
 		tabChat.classList.remove("active");
 	  } else {
-		// 2. 用户列表页 → 切到登录页（退出、关闭连接、重置数据）
 		if (currentWebSocket) {
 			try {
 			  currentWebSocket.send(JSON.stringify({ 
 			  type: "quit", 
-			  username: username // 告诉服务端要删除的是当前用户
+			  username: username
 			}));
 			} catch (e) {
 				console.log("退出时通知服务端失败:", e);
 			}
-			// ---
-			delete userFirstJoinTime[username]; 
 			onlineUsers = onlineUsers.filter(u => u !== username);
 			renderUserList();
-			// ---
 			currentWebSocket.onclose = null;
 			currentWebSocket.onerror = null;
 			currentWebSocket.close();
@@ -869,12 +973,11 @@
 		}
 		
 		if (username && onlineUsers.length > 0) {
-		  onlineUsers = onlineUsers.filter(u => u !== username); // 过滤掉自己
-		  renderUserList(); // 同步更新DOM列表
+		  onlineUsers = onlineUsers.filter(u => u !== username);
+		  renderUserList();
 		}
 			
 		connectStatus.style.display = "none";
-		// roomTitle.textContent = "cloudflare chatroom";
 		userListPage.style.display = "none";
 		backBtn.style.display = "none";
 		copyLinkBtn.style.display = "none";
@@ -890,10 +993,9 @@
 		  roomStatusTitle.textContent = "";
 		}
 		
-		// const roomTitle = document.querySelector("#room-title");
 		if (roomTitle) {
-		  roomTitle.style.display = "block"; // 恢复显示
-		  roomTitle.textContent = "cloudflare chatroom"; // 重置文字
+		  roomTitle.style.display = "block";
+		  roomTitle.textContent = "cloudflare chatroom";
 		}
 		
 		nameInput.value = "";
@@ -907,18 +1009,15 @@
 	  }
 	});
 
-      // 聊天输入框键盘事件
       chatInput.addEventListener("keydown", event => {
-	  // 仅保留：Enter（无论是否加shift）都只换行，不发送
 		  if (event.key === "Enter") {
 			event.preventDefault(); 
 			const start = chatInput.selectionStart;
 			const end = chatInput.selectionEnd;
 			chatInput.value = chatInput.value.substring(0, start) + "\n" + chatInput.value.substring(end);
 			chatInput.selectionStart = chatInput.selectionEnd = start + 1;
-			adjustInputHeight(); // 关键：回车后立即调整高度
+			adjustInputHeight();
 		  } 
-		  // 保留上下翻页等快捷键（可选，不影响核心逻辑）
 		  else if (event.keyCode == 38) {
 			chatlog.scrollBy(0, -50);
 		  } else if (event.keyCode == 40) {
@@ -926,14 +1025,12 @@
 		  } else if (event.keyCode == 33) {
 			chatlog.scrollBy(0, -chatlog.clientHeight + 50);
 		  } else if (event.keyCode == 34) {
-			chatlog.scrollBy(0, chatlog.clientHeight - 50);
+			chatlog.scrollBy(0, chatlog.clientHeight + 50);
 		  }
 		});
 		
-		// 🔥 核心修复：监听输入框内容变化（仅处理删除/换行，不处理普通字符）
 		chatInput.addEventListener("input", (e) => {
 		  const lineCount = (chatInput.value.match(/\n/g) || []).length;
-		  // 补充兼容：覆盖更多删除/退格的inputType场景
 		  const isDelete = ["deleteContentBackward", "deleteContentForward", "backspace", "delete"].includes(e.inputType);
 		  const isLineChange = lineCount !== chatInput.dataset.lastLineCount;
 		  
@@ -944,22 +1041,15 @@
 		});
 		
 		chatInput.addEventListener("blur", adjustInputHeight);
-	// 内容变化时自动调整高度
-	 // chatInput.addEventListener("input", adjustInputHeight);
-	  // 页面加载时初始化高度
-	  // adjustInputHeight();
 	  
-      // 发送按钮点击事件
       sendBtn.addEventListener("click", () => {
         sendMessage();
       });
 
-      // 聊天记录滚动事件
       chatlog.addEventListener("scroll", event => {
         isAtBottom = chatlog.scrollTop + chatlog.clientHeight >= chatlog.scrollHeight - 10;
       });
 
-      // 复制链接按钮事件
       copyLinkBtn.addEventListener("click", () => {
         const currentUrl = window.location.href;
         navigator.clipboard.writeText(currentUrl).then(() => {
@@ -969,7 +1059,6 @@
         });
       });
 
-      // 选项卡切换事件
       if (tabUserList && tabChat && userListPage && chatroom) {
         tabUserList.addEventListener("click", () => {
           tabUserList.classList.add("active");
@@ -984,15 +1073,25 @@
           userListPage.style.display = "none";
           chatroom.style.display = "block";
           chatlog.scrollBy(0, 1e8);
-		  // chatInput.focus();
-		  // chatInput.selectionStart = chatInput.selectionEnd = 0;
         });
       }
+	  
 	  chatInput.dataset.lastLineCount = (chatInput.value.match(/\n/g) || []).length;
       nameInput.focus();
+	  
+	  let scrollLock = false;
+      chatInput.addEventListener("focus", () => {
+        if (scrollLock) return;
+        scrollLock = true;
+        document.querySelector("#header").style.display = "block";
+        window.scrollTo(0, 0);
+        setTimeout(() => {
+          scrollLock = false;
+        }, 300);
+      });
     }
 
-    // 进入聊天室
+    // ========== 进入聊天室 ==========
     function startChat() {
       loginForm.style.display = "none";
       if (userListPage) {
@@ -1005,9 +1104,7 @@
       copyLinkBtn.style.display = "block";
 	  
 	  adjustInputHeight();
-	  
 
-      // 格式化房间名
       roomname = roomname
         .replace(/[^a-zA-Z0-9_-]/g, "")
         .replace(/_/g, "-")
@@ -1021,9 +1118,7 @@
 	  
 	  const roomStatusTitle = document.querySelector("#room-status-title");
 	  if (roomStatusTitle) {
-		// 把「已连接 房间名」加到标题前面
-		// roomStatusTitle.textContent = `已连接 ${roomname} 当前房间用户：`;
-		roomStatusTitle.textContent = ""; // 清空所有文字
+		roomStatusTitle.textContent = "";
 	  }
 
       document.location.hash = "#" + roomname;
@@ -1031,68 +1126,49 @@
       join();
     }
 
-    // 发送消息
+    // ========== 发送消息：直接发送输入框原始文本 ==========
     function sendMessage() {
+      // 1. 获取输入框原始文本
       const message = chatInput.value.trim();
-	  // 图片区
-	  if (pendingImageUrl) {
-		if (!currentWebSocket || currentWebSocket.readyState !== WebSocket.OPEN) {
-		  alert("连接已断开，请重新进入房间！");
-		  return;
-		}
-		sendBtn.disabled = true;
-		sendBtn.style.opacity = "0.6";
-		
-		// 发送图片URL（当作普通文字消息）
-		currentWebSocket.send(JSON.stringify({
-		  message: pendingImageUrl, // 图片URL作为消息内容
-		  name: username
-		}));
-		// 图片区
-		chatInput.value = ""; // 新增：清空输入框（可选）
-		adjustInputHeight(); // 新增：重置输入框高度（可选）
-		// 图片区
-		pendingImageUrl = "";
-		chatInput.placeholder = "请输入消息...";
-		sendBtn.disabled = false;
-		sendBtn.style.opacity = "1";
-		chatlog.scrollBy(0, 1e8);
-		isAtBottom = true;
-		return; // 发送图片后直接返回，不处理文字
-	  }
-	  // 图片区
+	  
+      // 2. 校验空消息
       if (!message || message === "undefined" || message === "null") {
 		alert("请输入消息内容！");
 		return;
-	  }
+      }
+      
+      // 3. 校验连接状态
       if (!currentWebSocket || currentWebSocket.readyState !== WebSocket.OPEN) {
         alert("连接已断开，请重新进入房间！");
         return;
       }
       
+      // 4. 禁用发送按钮
       sendBtn.disabled = true;
       sendBtn.style.opacity = "0.6";
       
-      console.log("发送消息:", message);
-      
+      // 5. 直接发送原始消息（不做任何处理）
+      console.log("发送原始消息:", message);
       currentWebSocket.send(JSON.stringify({
         message: message,
-		name: username // 👇 新增
+		name: username
       }));
       
+      // 6. 清空输入框并调整高度
       chatInput.value = "";
-	  adjustInputHeight(); // 关键：发送后重置高度为默认
+	  adjustInputHeight();
       chatlog.scrollBy(0, 1e8);
       isAtBottom = true;
 
+      // 7. 恢复发送按钮
       setTimeout(() => {
         sendBtn.disabled = false;
         sendBtn.style.opacity = "1";
       }, 100);
     }
 
-    // 连接WebSocket
-    function join() { 
+    // ========== 连接WebSocket ==========
+    function join() {
       if (currentWebSocket) {
         try {
           currentWebSocket.close();
@@ -1102,13 +1178,12 @@
 
       chatlog.innerHTML = "";
       isAtBottom = true;
+	  onlineUsers = []; // ✅ 新增：重连时清空用户列表
+	  renderUserList(); // ✅ 新增：重新渲染空列表
 	  
-	  delete userFirstJoinTime[username]; 
-	  renderUserList();
-      
-      const wssProtocol = document.location.protocol === "https:" ? "wss://" : "ws://";
-      const wsUrl = `${wssProtocol}${hostname}/api/room/${roomname}/websocket`;
-      console.log("尝试连接 WebSocket:", wsUrl);
+	  const wssProtocol = document.location.protocol === "https:" ? "wss://" : "ws://";
+	  const wsUrl = `${wssProtocol}${hostname}/api/room/${roomname}/websocket`;
+	  console.log("尝试连接 WebSocket:", wsUrl);
       
       let ws;
       try {
@@ -1117,7 +1192,6 @@
         
         ws.onopen = () => {
           console.log("WebSocket 连接已打开");
-          // connectStatus.style.display = "inline";
           const initMsg = JSON.stringify({ name: username });
           console.log("发送初始化消息:", initMsg);
           ws.send(initMsg);
@@ -1134,7 +1208,6 @@
             }
             
             if (data.joined) {
-              // addChatMessage(null, ` ${data.joined} 加入了聊天室`, true);
               if (!onlineUsers.includes(data.joined)) {
                 onlineUsers.push(data.joined);
                 renderUserList();
@@ -1143,14 +1216,7 @@
             }
             
             if (data.quit) {
-              // addChatMessage(null, ` ${data.quit} 离开了聊天室`, true);
               onlineUsers = onlineUsers.filter(u => u !== data.quit);
-              renderUserList();
-              return;
-            }
-            
-            if (data.users) {
-              onlineUsers = data.users;
               renderUserList();
               return;
             }
@@ -1161,8 +1227,24 @@
             }
             
             if (data.message && data.timestamp && typeof data.message === "string" && data.message.trim()) {
+			  // 优化：先判断ID是否在已发送集合中（优先级更高）
+			  const isSelfImageMsg = data.isImage && data.name === username && data.msgId && sentImageMsgIds.has(data.msgId);
+			  if (isSelfImageMsg) {
+				sentImageMsgIds.delete(data.msgId); // 清理已处理的ID
+				console.log("跳过自己发送的图片消息，避免重复");
+				return;
+			  }
+			  // 原有DOM匹配逻辑（兜底）
+			  if (data.isImage && data.name === username && data.msgId) {
+				const existingBubble = document.querySelector(`.bubble[data-msg-id="${data.msgId}"]`);
+				if (existingBubble) {
+				  console.log("跳过自己发送的图片消息重复渲染");
+				  return;
+				}
+			  }
+			  // 正常渲染非图片/他人消息
 			  if (data.timestamp > lastSeenTimestamp) {
-				const userName = data.name ? data.name : "未知用户"; // 兜底name
+				const userName = data.name ? data.name : "未知用户";
 				const isSelf = userName === username;
 				addChatMessage(
 				  isSelf ? "我" : userName,
@@ -1208,9 +1290,9 @@
       }
     }
 
-    // 添加消息到聊天窗口
+    // ========== 添加消息：仅做简单格式化 ==========
     function addChatMessage(name, text, isSystem = false, isSelf = false) {
-		// 👇 新增过滤代码【放在这一行，函数开头第一行】
+	  // 过滤空/无效消息
 	  if (text === undefined || text === null || text.trim() === "") {
 		console.log("忽略空/undefined消息");
 		return;
@@ -1219,7 +1301,7 @@
 		console.log("忽略'undefined'字符串消息");
 		return;
 	  }
-	  // 👆 新增结束
+	  
       console.log("添加消息:", { name, text, isSystem, isSelf });
       
       const msgDiv = document.createElement("div");
@@ -1242,7 +1324,9 @@
 
         const bubbleDiv = document.createElement("div");
         bubbleDiv.className = "bubble";
-        bubbleDiv.innerHTML = replaceUrlWithLink(text);
+        // 仅做极简格式化：换行 + 第一个URL转可点击
+		
+        bubbleDiv.innerHTML = formatMessageText(text);
         contentDiv.appendChild(bubbleDiv);
         
         msgDiv.appendChild(contentDiv);
@@ -1254,7 +1338,7 @@
       }
     }
 
-    // 页面加载初始化
+    // ========== 页面加载初始化 ==========
     window.addEventListener("load", () => {
       console.log("页面加载完成，初始化登录表单");
       userListPage = document.querySelector("#user-list-page");
@@ -1265,14 +1349,14 @@
 	  adjustInputHeight();
     });
 	
-    // 页面关闭时清理连接
+    // ========== 页面关闭清理连接 ==========
     window.addEventListener("beforeunload", () => {
 	  if (currentWebSocket) {
-		// 👇 新增try-catch发送退出消息
 		try {
 		  currentWebSocket.send(JSON.stringify({ type: "quit", username: username }));
 		} catch (e) {}
 		currentWebSocket.close(1000, "页面关闭");
+		currentWebSocket = null;
 	  }
 	});
   </script>
