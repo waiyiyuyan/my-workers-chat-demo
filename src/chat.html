@@ -19,7 +19,7 @@
     }
     body {
 	  font-family: "Ubuntu", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-	  background-color: #d9d5d9;
+	  background-color: silver;
 	  color: #333;
 	  min-height: 100vh;
 	  margin: 0;
@@ -32,11 +32,13 @@
       left: 0;
       right: 0;
       height: 44px;
-      background: linear-gradient(to bottom, #555555 0%, #333333 100%);
+      
+	  background: linear-gradient(to bottom, #63696a 5%, #363d3f 100%);
       color: #ffffff;
       font-size: 18px;
       font-weight: 500;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.1), /* 内发光模拟磨砂 */
+              0 1px 3px rgba(0,0,0,0.5); /* 轻微外阴影 */
       z-index: 100;
       text-align: center;
       line-height: 44px;
@@ -50,48 +52,58 @@
 	}
 	
 	#back-btn {
-      position: absolute !important; 
-      left: 16px !important;
-      top: 50% !important;
-      transform: translateY(-50%) !important;
-      width: 60px; 
-      height: 30px; 
-      line-height: 30px;
-      text-align: center;
-      color: #ffffff;
-      text-decoration: none;
-      font-size: 14px;
-      display: none;
-      z-index: 999 !important;
-      background: linear-gradient(135deg, #777777 0%, #555555 100%);
-      border: 1.5px solid #666666;
-      border-radius: 4px;
-      box-shadow: inset 0 0 1px rgba(255,255,255,0.2), 0 1px 3px rgba(0, 0, 0, 0.2);
-      padding-left: 8px;
-      box-sizing: border-box;
-      overflow: hidden;
-    }
+	  position: absolute !important; 
+	  left: 20px !important;
+	  top: 50% !important;
+	  transform: translateY(-50%) !important;
+	  color: #ffffff;
+	  text-decoration: none;
+	  font-size: 14px;
+	  display: none;
+	  z-index: 999 !important;
+	  /* 移除所有背景、边框、阴影、圆角、clip-path 等样式 */
+	  background: none !important;
+	  border: none !important;
+	  box-shadow: none !important;
+	  clip-path: none !important;
+	  width: auto !important;
+	  height: auto !important;
+	  line-height: 1em !important;
+	  padding: 0 !important;
+	  /* 新增：箭头和文字居中 */
+	  align-items: center !important;
+	}
 
-    #back-btn::before {
-      content: "";
-      position: absolute;
-      left: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-right: 8px solid #ffffff;
-      border-radius: 2px;
-      filter: drop-shadow(0 0 1px rgba(0,0,0,0.2));
-    }
-
-    #back-btn:active {
-      background: linear-gradient(135deg, #666666 0%, #444444 100%);
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
-      border-color: #555555;
-      opacity: 1;
-    }
+	/* 新增：返回箭头样式 */
+	#back-btn::before {
+	  content: "";
+	  display: inline-block !important;
+	  width: 8px;
+	  height: 8px;
+	  margin-right: 2px !important;
+	  border: 2px solid #ffffff;
+	  border-top: none;
+	  border-right: none;
+	  border-radius: 2px 0 0 2px;
+	  /* 修复：合并transform，优先用这个值，且只写一个transform */
+	  transform: rotate(45deg) translateY(-18px) !important; 
+	  -webkit-transform: rotate(45deg) translateY(-1px) !important;
+	  vertical-align: middle !important;
+	  position: relative !important; /* 新增：确保偏移生效 */
+	  top: -1px !important; /* 备用：额外向上偏移1px，双保险 */
+	}
 	
+	#back-btn::after {
+	  display: none !important;
+	}
+	
+	#back-btn:active {
+	  background: none !important;
+	  box-shadow: none !important;
+	  border: none !important;
+	  opacity: 0.8; /* 仅保留点击时的透明度变化，可选 */
+	}
+		
 	#connect-status {
 	  margin-right: 5px;
 	  font-size: 14px;
@@ -101,7 +113,7 @@
     
     #copy-link {
       position: absolute;
-      right: 10px;
+      right: 20px;
       top: 50%;
       transform: translateY(-50%);
       width: 80px;
@@ -132,7 +144,7 @@
 	  bottom: 0;
 	  left: 0;
 	  right: 0;
-	  background-color: #d9d5d9;
+	  background-color: silver;
 	  padding-top: 80px;
 	}
     
@@ -184,7 +196,7 @@
 	  height: 48px;
 	  line-height: 48px;
 	  margin: 15px 0 15px auto; /* 关键2：margin-left: auto 实现右对齐 */
-	  background: linear-gradient(to bottom, #a8d930 10%, #799f26 100%);
+	  background: linear-gradient(to bottom, #9ecf35 10%, #8eba30 100%);
 	  color: #000;
 	  border: 1.5px solid #6b8f20; /* 边框匹配绿色系，可选 */
 	  border-radius: 8px;
@@ -192,11 +204,10 @@
 	  font-weight: 500;
 	  cursor: pointer;
 	  box-shadow: 
-		inset 0 0 1px rgba(255,255,255,0.2),
-		0 1px 3px rgba(0, 0, 0, 0.2),
-		1px 0 3px rgba(0, 0, 0, 0.15),
-		-1px 0 3px rgba(0, 0, 0, 0.15),
-		0 -1px 3px rgba(0, 0, 0, 0.1);
+		inset 0 1px 2px rgba(255, 255, 255, 0.5),
+		1px 1px 1px rgba(0, 0, 0, 0.2), 
+		0 1px 2px rgba(0, 0, 0, 0.2), 
+		-1px 1px 1px rgba(0, 0, 0, 0.15);
 	}
     
     #enter-room:active {
@@ -254,7 +265,7 @@
     
     .msg .bubble {
 	  padding: 8px 12px;
-	  border-radius: 8px;
+	  border-radius: 6px;
 	  font-size: 15px;
 	  line-height: 1.5;
 	  word-wrap: break-word;
@@ -283,25 +294,29 @@
 	}
 	
 	.msg.left .bubble {
-	  background: linear-gradient(to bottom, #e8e8e8 10%, #d0d0d0 100%);
+	  background: linear-gradient(to bottom, #efefef 10%, #d7d7d7 100%);
 	  color: #000;
 	  border-bottom-left-radius: 2px;
-	  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3), 
-              0 2px 4px rgba(0, 0, 0, 0.2), 
-              -1px 1px 4px rgba(0, 0, 0, 0.15);
+	  box-shadow: 
+		inset 0 1px 2px rgba(255, 255, 255, 0.5), /* 新增：顶部白色内阴影（光泽核心） */
+		1px 1px 1px rgba(0, 0, 0, 0.2), 
+        0 1px 2px rgba(0, 0, 0, 0.2), 
+        -1px 1px 1px rgba(0, 0, 0, 0.15);
 	  position: relative;
 	  overflow: hidden;
 	}
 	
 	.msg.right .bubble {
-	  background: linear-gradient(to bottom, #a8d930 10%, #799f26 100%);
+	  background: linear-gradient(to bottom, #9ecf35 10%, #8eba30 100%);
 	  color: #000;
 	  border-bottom-right-radius: 2px;
-	  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3), 
-             0 2px 4px rgba(0, 0, 0, 0.2), 
-             -1px 1px 4px rgba(0, 0, 0, 0.15);
+	  box-shadow: 
+		inset 0 1px 2px rgba(255, 255, 255, 0.5), /* 新增：顶部白色内阴影（光泽核心） */
+		1px 1px 1px rgba(0, 0, 0, 0.2), 
+		0 1px 2px rgba(0, 0, 0, 0.2), 
+		-1px 1px 1px rgba(0, 0, 0, 0.15);
 	  position: relative;
-	  overflow: hidden;
+	  overflow: hidden; /* 必须保留：让内阴影不溢出气泡 */
 	}
     
     .msg .username {
@@ -334,12 +349,13 @@
 	  right: 0;
 	  height: auto;
 	  min-height: 48px; /* 保留最小高度，保证默认状态和原来一致 */
-	  background: linear-gradient(to bottom, #555555 0%, #333333 100%);
+	  background: linear-gradient(to bottom, #63696a 5%, #363d3f 100%);
 	  padding: 4px 15px;
 	  display: flex;
 	  align-items: center;
 	  border-top: 1px solid #222222;
-	  box-shadow: 0 -1px 5px rgba(0,0,0,0.3);
+	  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), /* 内发光 */
+              0 -1px 3px rgba(0,0,0,0.3); /* 轻微外阴影 */
 	}
     
     #chat-input {
@@ -387,39 +403,34 @@
 	  border-radius: 2px;
 	}
     
-    #send-btn {
-	  width: 65px;
+	#send-btn {
+	  width: auto;
+	  padding: 0 10px;
 	  height: 38px; 
 	  line-height: 38px; 
 	  text-align: center;
-	  background: linear-gradient(135deg, #777777 0%, #555555 100%);
-	  color: #ffffff;
-	  border: 1.5px solid #666666;
-	  border-radius: 8px;
+	  /* 保留你原有渐变色，不修改 */
+	  background: linear-gradient(to bottom, #919496 0%, #393e41 100%);
+	  color: #ffffff; /* 保留原有白色文字（如需浅灰可改 #f0f0f0） */
+	  border: none !important;
+	  border-radius: 2px; /* 小圆角，贴合图中方块感 */
 	  font-size: 15px;
-	  font-weight: 500;
+	  font-weight: 400; /* 取消加粗，匹配图中文字粗细 */
 	  cursor: pointer;
 	  margin-left: 10px;
-	  align-self: flex-end; /* 关键：按钮底部对齐，输入框增高时按钮不跑偏 */
-	  box-shadow: 
-		inset 0 0 1px rgba(255,255,255,0.2),
-		0 1px 3px rgba(0, 0, 0, 0.2),
-		1px 0 3px rgba(0, 0, 0, 0.15),
-		-1px 0 3px rgba(0, 0, 0, 0.15),
-		0 -1px 3px rgba(0, 0, 0, 0.1);
+	  align-self: flex-end;
+	  /* 彻底去掉所有阴影 */
+	  box-shadow: none !important;
 	}
-	
+
 	#send-btn:active {
-	  background: linear-gradient(135deg, #666666 0%, #444444 100%);
-	  box-shadow: 
-		inset 0 1px 3px rgba(0, 0, 0, 0.3),
-		inset 1px 0 3px rgba(0, 0, 0, 0.2),
-		inset -1px 0 3px rgba(0, 0, 0, 0.2),
-		inset 0 -1px 3px rgba(0, 0, 0, 0.1);
-	  border-color: #555555;
+	  /* 保留原有按下态渐变色，去掉阴影 */
+	  background: linear-gradient(to bottom, #aeaeae 10%, #161616 60%);
+	  box-shadow: none !important; /* 按下态也无阴影 */
 	}
     
     @media(max-width: 480px) {
+
 	  /* 新增：控制登录表单容器宽度，让输入框+按钮整体居中 */
 	  #login-form > div {
 		width: 75% !important; /* 匹配移动端输入框原75%宽度 */
@@ -450,17 +461,23 @@
 		width: 70px;
 		font-size: 13px;
 	  }
-	  /* 👇 新增这部分 */
+	  /* 👇 新增这部分 */ 
 	  [for="image-upload"] {
-		margin-left: 4px !important;
-		margin-right: 8px !important;
-		width: 34px !important;
-		height: 34px !important;
-	  }
-	  [for="image-upload"] svg {
-		width: 28px !important;
-		height: 28px !important;
-	  }
+	  margin-left: 0px !important;
+	  margin-right: 8px !important;
+	  width: auto !important;
+	  height: 34px !important;
+	  padding: 0 8px !important;
+	  touch-action: none;
+	  -webkit-touch-callout: none;
+	  -webkit-tap-highlight-color: transparent;
+	  cursor: pointer;
+	}
+	[for="image-upload"] svg {
+	  width: 20px !important;
+	  height: 20px !important;
+	}
+	  
 	  /* 用户列表头像适配移动端 */
 	  .user-avatar {
 		width: 18px !important;
@@ -472,23 +489,20 @@
 		appearance: none;
 	  }
 	  
-	  label[for="image-upload"] {
-		touch-action: none; /* 禁用浏览器默认触摸行为 */
-		-webkit-touch-callout: none; /* 禁用iOS长按菜单 */
-		-webkit-tap-highlight-color: transparent; /* 移除iOS点击高亮 */
-		cursor: pointer;
+	  /* 移动端图片容器尺寸 */
+	  .img-content {
+		width: 160px !important;
+		height: 100px !important;
+	  }
+	  .msg-img .msg-content {
+		max-width: 80%; /* 和文字消息保持一致 */
 	  }
 	}
 	
-	#tab-user-list.active, #tab-chat.active {
-	  background: #777;
-	  color: #fff;
-	  font-weight: 500;
-	}
-	
 	label[for="image-upload"]:active {
-	  background: linear-gradient(135deg, #666666 0%, #444444 100%);
-	  opacity: 0.9;
+	  background: linear-gradient(to bottom, #aeaeae 10%, #161616 60%);
+	  box-shadow: none !important;
+	  opacity: 1;
 	}
 	
 	/* 新增：用户头像样式 */
@@ -497,6 +511,193 @@
 	  height: 24px;
 	  margin-right: 8px;
 	  flex-shrink: 0; /* 防止头像被压缩 */
+	}
+	
+	/* ========== 用户列表选项卡完整样式（匹配深色磨砂风格） ========== */
+	#user-list-page {
+	  background-color: silver; /* 匹配页面背景 */
+	}
+	/* 选项卡容器（底部固定栏） */
+	#user-list-page > div:last-child {
+	  position: absolute; 
+	  bottom: 0; 
+	  left: 0; 
+	  right: 0; 
+	  height: 40px; 
+	  display: flex; 
+	  background: linear-gradient(to bottom, #63696a 5%, #363d3f 100%); /* 和导航栏/输入框同渐变 */
+	  z-index: 100; 
+	  border-top: 1px solid #222; /* 深色边框，匹配输入框 */
+	  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), /* 内发光磨砂 */
+				  0 -1px 3px rgba(0,0,0,0.3); /* 轻微外阴影 */
+	}
+	/* 选项卡按钮基础样式（用户/聊天） */
+	#tab-user-list, #tab-chat {
+	  flex: 1; 
+	  height: 100%; 
+	  border: none; 
+	  background: linear-gradient(to bottom, #919496 0%, #393e41 100%); /* 和返回按钮同渐变 */
+	  color: #ffffff; /* 白色文字，匹配导航栏 */
+	  font-size: 16px;
+	  font-weight: 400;
+	  box-shadow: inset 0 1px 1px rgba(255,255,255,0.05), /* 内发光 */
+				  0 1px 2px rgba(0,0,0,0.3); /* 外阴影 */
+	  transition: all 0.2s ease; /* 切换动画 */
+	}
+	/* 选项卡按钮点击态 */
+	#tab-user-list:active, #tab-chat:active {
+	  background: linear-gradient(135deg, #666666 0%, #444444 100%);
+	  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+	  border-color: #555555;
+	  opacity: 1;
+	}
+	/* 选项卡激活态（当前选中） */
+	#tab-user-list.active, #tab-chat.active {
+	  background: linear-gradient(to bottom, #777 10%, #555 100%); /* 激活态稍亮 */
+	  color: #fff; 
+	  font-weight: 500;
+	  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3); /* 内阴影突出激活 */
+	}
+/* 列表容器样式 */
+#users-list {
+  list-style: none; 
+  padding: 0; 
+  margin: 0;
+  width: 100%;
+}
+
+/* 通用列表项样式（保留所有原有样式参数） */
+#users-list li {
+  padding: 12px 20px;
+  border-bottom: 1px solid #e0e0e0; /* 保留原分割线 */
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* 保留原布局 */
+  /* 匹配图片的浅灰渐变（更柔和的上下渐变） */
+  background: linear-gradient(to bottom, #f5f5f5 0%, #e9e9e9 100%) !important;
+  border-radius: 2px; /* 保留原圆角（图片也是小圆角） */
+  margin-bottom: 2px; /* 保留原间距 */
+  /* 匹配图片的极简阴影（仅细边框+微弱内发光） */
+   box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.5), /* 气泡顶部白色内阴影（光泽核心） */
+    1px 1px 1px rgba(0, 0, 0, 0.2), 
+    0 1px 2px rgba(0, 0, 0, 0.2), 
+    -1px 1px 1px rgba(0, 0, 0, 0.15); /* 气泡多层外阴影 */
+  transition: none !important; /* 移除过渡（仅展示） */
+  position: relative;
+}
+
+/* 空列表项样式（同步匹配图片） */
+#users-list li.empty-item {
+  padding: 8px 20px; 
+  color: #666; 
+  display: flex; 
+  align-items: center;
+  border-bottom: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  /* 空列表项同步图片渐变 */
+  background: linear-gradient(to bottom, #f5f5f5 0%, #e9e9e9 100%) !important;
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.5),
+    1px 1px 1px rgba(0, 0, 0, 0.1), 
+    0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 头像样式（强制保留，仅统一尺寸，不删除） */
+.user-avatar {
+  width: 22px !important;
+  height: 24px !important;
+  flex-shrink: 0; /* 防止头像被压缩 */
+  margin-right: 8px; /* 头像和文字间距（原默认间距） */
+}
+
+/* 空列表项的头像颜色（匹配原有#666） */
+#users-list li.empty-item .user-avatar {
+  fill: #666 !important;
+}
+
+/* 正常列表项的头像颜色（匹配原有#333333） */
+#users-list li:not(.empty-item) .user-avatar {
+  fill: #333333 !important;
+}
+
+/* 列表项文字颜色（保留原有#333） */
+#users-list li span {
+  color: #333;
+}
+
+	/* ========== 图片消息样式（核心修改） ========== */
+	/* 图片消息容器（无气泡） */
+	.msg-img {
+	  display: flex;
+	  margin-bottom: 15px;
+	  max-width: 100%;
+	  position: relative;
+	}
+	.msg-img.left {
+	  justify-content: flex-start;
+	}
+	.msg-img.right {
+	  justify-content: flex-end;
+	}
+	/* 图片容器（固定尺寸） */
+	.img-content {
+	  width: 180px;
+	  height: 120px;
+	  border-radius: 6px;
+	  overflow: hidden;
+	  position: relative;
+	  background: #f0f0f0;
+	}
+	/* 图片加载中占位 */
+	.img-loading {
+	  width: 100%;
+	  height: 100%;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	  color: #999;
+	  font-size: 14px;
+	}
+	/* 图片加载失败占位 */
+	.img-error {
+	  width: 100%;
+	  height: 100%;
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  justify-content: center;
+	  color: #666;
+	  font-size: 12px;
+	}
+	.img-error svg {
+	  width: 40px;
+	  height: 40px;
+	  fill: #ccc;
+	  margin-bottom: 8px;
+	}
+	.msg-img .msg-content {
+	  max-width: 75%; /* 和文字消息的.msg-content一致 */
+	}
+	/* 真实图片样式（等比裁剪） */
+	.msg-img img {
+	  width: 100%;
+	  height: 100%;
+	  object-fit: cover;
+	  object-position: center;
+	  display: block;
+	  cursor: pointer;
+	}
+	
+	/* 图片消息用户名 */
+	.img-username {
+	  display: block;
+	  font-size: 12px;
+	  color: #666;
+	  margin-bottom: 5px;
+	  padding-left: 5px;
+	  padding-right: 5px;
 	}
   </style>
 </head>
@@ -527,21 +728,26 @@
     <div id="input-area">
 	<!-- 图片区 -->
 	  <label for="image-upload" style="
-		cursor: pointer;
-		margin-left: 8px;
-		margin-right: 12px; /* 新增：关键！按钮向左挪的核心 */
-		width: 38px;
-		height: 38px;
-		border-radius: 8px;
-		background: linear-gradient(135deg, #777777 0%, #555555 100%);
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		border: 1.5px solid #666666;
-		box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-		vertical-align: bottom;
-		padding: 0;
-		touch-action: manipulation; /* 优化移动端触摸事件 */
+	  cursor: pointer;
+	  margin-left: 0px;
+	  margin-right: 10px;
+	  width: auto;
+	  padding: 0 10px;
+	  height: 38px; 
+	  line-height: 38px; 
+	  text-align: center;
+	  background: linear-gradient(to bottom, #919496 0%, #393e41 100%);
+	  color: #ffffff;
+	  border: none !important;
+	  border-radius: 2px;
+	  font-size: 15px;
+	  font-weight: 400;
+	  display: inline-flex;
+	  align-items: center;
+	  justify-content: center;
+	  box-shadow: none !important;
+	  vertical-align: bottom;
+	  touch-action: manipulation;
 	  ">
 		<!-- 2. 放大 SVG 图标尺寸（从 20x20 改为 28x28，占满 38x38 按钮的大部分） -->
 	  <svg width="36" height="36" viewBox="0 0 24 24" fill="#ffffff">
@@ -563,8 +769,8 @@
 <!-- 用户列表页面 -->
 <div id="user-list-page" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow-y: auto;">
   <!-- 内容区（适配顶部导航栏 + 底部选项卡） -->
-  <div style="padding-top: 44px; padding-bottom: 40px; background: #d9d5d9; min-height: 100%;">
-    <div id="online-users" style="padding: 15px; font-size: 16px; color: #333;">
+  <div style="padding-top: 21px; padding-bottom: 40px; background: silver; min-height: 100%;">
+    <div id="online-users" style="padding: 15px 0; font-size: 16px; color: #333;">
       <p id="room-status-title" style="margin-bottom: 10px; font-weight: 500;">当前房间用户：</p>
       <ul id="users-list" style="list-style: none; padding: 0; margin: 0;">
         <!-- 动态渲染用户列表 -->
@@ -573,10 +779,10 @@
   </div>
 
   <!-- 选项卡绝对定位在父容器底部 -->
-  <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 40px; display: flex; background: #333; z-index: 100; border-top: 1px solid #222;">
-    <button id="tab-user-list" style="flex: 1; height: 100%; border: none; background: #555; color: #fff; font-size: 16px;">用户</button>
-    <button id="tab-chat" style="flex: 1; height: 100%; border: none; background: #444; color: #eee; font-size: 16px;">聊天</button>
-  </div>
+	<div>
+	  <button id="tab-user-list">用户</button>
+	  <button id="tab-chat">聊天</button>
+	</div>
 </div>
 
   <script type="text/javascript">
@@ -690,9 +896,9 @@ async function uploadToImageBed(file) {
   }
 }
 // 传图结束
-	// 传图结束
 
-	// ========== 图片选择事件：仿微信直接发送图片气泡 ==========
+	
+// ========== 图片选择事件：乐观渲染固定尺寸图片（核心修改） ==========
 	if (imageUpload) {
 		let isUploading = false; // 增加上传锁，避免重复触发
 		imageUpload.addEventListener("change", async (e) => {
@@ -722,41 +928,88 @@ async function uploadToImageBed(file) {
 					return;
 				}
 
-				// 3. 创建图片上传中的气泡（自己的消息）
+				// 3. 乐观渲染图片消息（固定尺寸无气泡）
 				const loadingMsgId = `img-loading-${Date.now()}`;
-				addChatMessage("我", "图片上传中...", false, true);
-				const loadingBubble = chatlog.lastChild?.querySelector(".bubble");
-				if (loadingBubble) {
-					loadingBubble.dataset.msgId = loadingMsgId;
+				addChatMessage("我", "", false, true, true); // 最后一个参数标记为图片消息
+				
+				// ✅ 修复1：提升变量作用域 + 立即尝试获取DOM（不再依赖setTimeout）
+				let imgContent = chatlog.lastChild?.querySelector(".img-content");
+				if (imgContent) {
+					imgContent.dataset.msgId = loadingMsgId;
+				} else {
+					// 立即获取失败，延迟重试（延长到50ms，确保DOM渲染完成）
+					setTimeout(() => {
+						const delayedImgContent = chatlog.lastChild?.querySelector(".img-content");
+						if (delayedImgContent) {
+							delayedImgContent.dataset.msgId = loadingMsgId;
+						}
+					}, 50);
 				}
 
 				try {
 					// 4. 上传图片
 					const imageUrl = await uploadToImageBed(file);
+					console.log("图片上传成功，URL：", imageUrl);
 					
-					// 5. 上传成功：更新气泡内容为图片链接
-					if (loadingBubble) {
-						loadingBubble.innerHTML = formatMessageText(imageUrl);
-						// loadingBubble.innerHTML = `<a href="${imageUrl}" target="_blank">${imageUrl}</a>`;
+					// 5. 上传成功：更新为真实图片（优先用msgId查找，最稳定）
+					// ✅ 修复2：优先通过msgId查找DOM，避免作用域问题
+					const targetImgContent = document.querySelector(`.img-content[data-msg-id="${loadingMsgId}"]`) || imgContent;
+					
+					if (targetImgContent) {
+						const img = new Image();
+						// 开启跨域支持（避免部分图床图片跨域报错）
+						img.crossOrigin = "anonymous";
+						img.onload = () => {
+							targetImgContent.innerHTML = `<img src="${imageUrl}" onclick="window.open('${imageUrl}', '_blank')">`;
+							console.log("图片渲染成功");
+						};
+						img.onerror = () => {
+							console.error("图片加载失败，URL：", imageUrl);
+							// 加载失败显示占位
+							targetImgContent.innerHTML = `
+								<div class="img-error">
+									<svg viewBox="0 0 24 24">
+										<path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+										<path d="M12 10l-2 2 2 2 2-2-2-2zm0-6v2h2V4h-2zm0 12v2h2v-2h-2z"/>
+									</svg>
+									<span>图片加载失败</span>
+								</div>
+							`;
+						};
+						img.src = imageUrl;
+					} else {
+						console.error("未找到图片容器，msgId：", loadingMsgId);
+						// 兜底：重新添加图片消息
+						addChatMessage("我", imageUrl, false, true, true);
 					}
 					
 					// 6. 发送图片链接到聊天室
 					if (currentWebSocket && currentWebSocket.readyState === WebSocket.OPEN) {
-						sentImageMsgIds.add(loadingMsgId); // ✅ 必加
-					  currentWebSocket.send(JSON.stringify({
-						message: imageUrl,
-						name: username,
-						isImage: true, // 标记这是图片消息
-						msgId: loadingMsgId // 携带本地创建的唯一ID
-					  }));
+						sentImageMsgIds.add(loadingMsgId);
+						currentWebSocket.send(JSON.stringify({
+							message: imageUrl,
+							name: username,
+							isImage: true, // 标记这是图片消息
+							msgId: loadingMsgId
+						}));
 					}
 				} catch (err) {
-					// 7. 上传失败：更新气泡内容为错误提示
-					if (loadingBubble) {
-						loadingBubble.textContent = err.message;
+					console.error("图片上传失败：", err);
+					// 7. 上传失败：更新为错误提示
+					// ✅ 修复3：上传失败时也用msgId查找DOM
+					const targetImgContent = document.querySelector(`.img-content[data-msg-id="${loadingMsgId}"]`) || imgContent;
+					if (targetImgContent) {
+						targetImgContent.innerHTML = `
+							<div class="img-error">
+								<svg viewBox="0 0 24 24">
+									<path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+									<path d="M12 10l-2 2 2 2 2-2-2-2zm0-6v2h2V4h-2zm0 12v2h2v-2h-2z"/>
+								</svg>
+								<span>${err.message}</span>
+							</div>
+						`;
 					}
-					// sentImageMsgIds.delete(loadingMsgId);
-					sentImageMsgIds.delete(loadingMsgId); // ✅ 确保失败时也删除
+					sentImageMsgIds.delete(loadingMsgId);
 				}
 			} finally {
 				// 8. 重置状态和文件选择器
@@ -799,59 +1052,15 @@ async function uploadToImageBed(file) {
 	  }
 	}
 
-    // ========== 极简的消息处理：仅换行和链接转可点击 ==========
-	/*
-	function formatMessageText(text) {
-	  // 第一步：替换换行符
-	  let formattedText = text.replace(/\n/g, "<br>");
-	  // 第二步：匹配所有HTTP/HTTPS链接（包括图片链接），转成可点击的文本链接
-	  const urlRegex = /(https?:\/\/[^\s]+)/g;
-	  formattedText = formattedText.replace(urlRegex, (url) => {
-		// 只返回纯链接文本（点击可跳转），无任何图片标签
-		return `<a href="${encodeURI(url)}" target="_blank" style="color: #0066cc; word-break: break-all;">${url}</a>`;
-	  });
-	  return formattedText;
-	}
-	*/
+    // ========== 格式化消息：仅处理文字链接 ==========
 	function formatMessageText(text) {
 	  // 第一步：先清理文本中的多余引号（避免干扰正则）
 	  let formattedText = text.replace(/"/g, "").replace(/\n/g, "<br>");
-	  // 1. 匹配图片链接（严格排除特殊字符，避免语法错误）
-	  const imgRegex = /(https?:\/\/[^\s"'><]+\.(jpg|jpeg|png|gif|webp))/gi;
-	  formattedText = formattedText.replace(imgRegex, (url) => {
-	  const encodedUrl = encodeURI(url);
-		// 用单引号包裹属性，避免和双引号冲突；标签完整闭合
-		return `
-		  <!-- 仅图片容器限制最大宽度，文字气泡不变 -->
-		  <div style='max-width: 200px; /* 图片气泡最大200px宽 */
-					  margin: 4px auto; /* 居中，上下留白 */
-					  text-align: center;'>
-			<img 
-			  src='${encodedUrl}' 
-			  style='width: 100%; 
-					 max-height: 200px; 
-					 border-radius: 6px; 
-					 cursor: pointer; 
-					 border: 0.5px solid #f5f5f5;
-					 box-shadow: 0 1px 2px rgba(0,0,0,0.05);' 
-			  alt='图片预览'
-			  onclick='window.open("${encodedUrl}", "_blank")'
-			  onError='this.style.display="none"; this.nextElementSibling.style.display="block"'
-			>
-			<div style='display: none; font-size: 14px; color: #0066cc; cursor: pointer; padding: 8px;'
-				 onclick='window.open("${encodedUrl}", "_blank")'>
-			  点击查看图片
-			</div>
-		  </div>
-		`;
-	  });
-	  
-	  // 2. 处理普通链接（排除已被图片处理的链接）
+	  // 处理普通链接（排除已被图片处理的链接）
 	  const urlRegex = /(https?:\/\/[^\s"'><]+)(?![^<]*>)/g;
 	  formattedText = formattedText.replace(urlRegex, (url) => {
 		return `<a href='${encodeURI(url)}' target='_blank' style='color: #0066cc; word-break: break-all;'>${url}</a>`;
 	  });
-	  
 	  return formattedText;
 	}
 
@@ -861,31 +1070,38 @@ async function uploadToImageBed(file) {
 	  usersList.innerHTML = "";
 	  
 	  if (onlineUsers.length === 0) {
-		usersList.innerHTML = "<li style='padding: 8px 20px; color: #666; display: flex; align-items: center;'><svg class='user-avatar' width='22' height='24' viewBox='0 0 512 512' fill='#666' xmlns='http://www.w3.org/2000/svg'><path d='M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z'/><path d='M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z'/></svg>当前暂无在线用户</li>";
+		// 仅添加class，保留完整头像SVG，不删除任何内容
+		usersList.innerHTML = `<li class="empty-item">
+		  <svg class='user-avatar' width='22' height='24' viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'>
+			<path d='M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z'/>
+			<path d='M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z'/>
+		  </svg>当前暂无在线用户</li>`;
 		return;
 	  }
 	  
 	  onlineUsers.forEach(user => {
 		const li = document.createElement("li");
-		li.style.cssText = `
-		  padding: 8px 20px;
-		  border-bottom: 1px solid #ccc;
-		  display: flex;
-		  align-items: center;
-		  justify-content: space-between;
-		`;
-		// 核心：添加头像SVG + 用户名
+		// 完全删除内联style.cssText，改用CSS类控制
+		// 保留完整的头像SVG结构，不修改任何头像代码
 		li.innerHTML = `
 		  <div style="display: flex; align-items: center;">
-			<svg class="user-avatar" width="22" height="24" viewBox="0 0 512 512" fill="#333333" xmlns="http://www.w3.org/2000/svg">
+			<svg class="user-avatar" width="22" height="24" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 			  <path d="M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z"/>
 			  <path d="M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z"/>
 			</svg>
-			<span style="color: #333;">${user}</span>
+			<span>${user}</span>
 		  </div>
 		`;
 		usersList.appendChild(li);
 	  });
+	  
+	  // 保留容器基础样式（仅必要属性，其余交给CSS）
+	  usersList.style.cssText = `
+		list-style: none; 
+		padding: 0; 
+		margin: 0;
+		width: 100%;
+	  `;
 	}
 
     // ========== 初始化登录表单 ==========
@@ -952,7 +1168,7 @@ async function uploadToImageBed(file) {
 	  if (chatroom.style.display === "block") {
 		chatroom.style.display = "none";
 		userListPage.style.display = "block";
-		tabUserList.classList.add("active");
+		// tabUserList.classList.add("active");
 		tabChat.classList.remove("active");
 	  } else {
 		if (currentWebSocket) {
@@ -1059,22 +1275,64 @@ async function uploadToImageBed(file) {
         });
       });
 
-      if (tabUserList && tabChat && userListPage && chatroom) {
-        tabUserList.addEventListener("click", () => {
-          tabUserList.classList.add("active");
-          tabChat.classList.remove("active");
-          userListPage.style.display = "block";
-          chatroom.style.display = "none";
-        });
+      // 替换原有选项卡点击事件逻辑（initLoginForm 函数内）
+	if (tabUserList && tabChat && userListPage && chatroom) {
+	  // 通用激活/移除激活函数
+	  const toggleTabActive = (tab, isActive) => {
+		if (isActive) {
+		  tab.classList.add("active");
+		} else {
+		  // tab.classList.remove("active");
+		  setTimeout(() => {
+			tab.classList.remove("active");
+		  }, 100);
+		}
+	  };
 
-        tabChat.addEventListener("click", () => {
-          tabChat.classList.add("active");
-          tabUserList.classList.remove("active");
-          userListPage.style.display = "none";
-          chatroom.style.display = "block";
-          chatlog.scrollBy(0, 1e8);
-        });
-      }
+	  // 用户选项卡：点击按下激活，松开/离开移除
+	  tabUserList.addEventListener("mousedown", (e) => {
+		e.preventDefault();
+		toggleTabActive(tabUserList, true);
+		// 切换页面逻辑
+		userListPage.style.display = "block";
+		chatroom.style.display = "none";
+	  });
+	  tabUserList.addEventListener("mouseup", () => toggleTabActive(tabUserList, false));
+	  tabUserList.addEventListener("mouseleave", () => toggleTabActive(tabUserList, false));
+
+	  // 移动端兼容：touch 事件
+	  tabUserList.addEventListener("touchstart", (e) => {
+		e.preventDefault();
+		toggleTabActive(tabUserList, true);
+		userListPage.style.display = "block";
+		chatroom.style.display = "none";
+	  });
+	  tabUserList.addEventListener("touchend", () => toggleTabActive(tabUserList, false));
+	  tabUserList.addEventListener("touchcancel", () => toggleTabActive(tabUserList, false));
+
+	  // 聊天选项卡：和用户选项卡逻辑完全一致
+	  tabChat.addEventListener("mousedown", (e) => {
+		e.preventDefault();
+		toggleTabActive(tabChat, true);
+		// 切换页面逻辑
+		userListPage.style.display = "none";
+		chatroom.style.display = "block";
+		chatlog.scrollBy(0, 1e8);
+	  });
+	  tabChat.addEventListener("mouseup", () => toggleTabActive(tabChat, false));
+	  tabChat.addEventListener("mouseleave", () => toggleTabActive(tabChat, false));
+
+	  // 移动端兼容：touch 事件
+	  tabChat.addEventListener("touchstart", (e) => {
+		e.preventDefault();
+		toggleTabActive(tabChat, true);
+		userListPage.style.display = "none";
+		chatroom.style.display = "block";
+		chatlog.scrollBy(0, 1e8);
+	  });
+	  tabChat.addEventListener("touchend", () => toggleTabActive(tabChat, false));
+	  tabChat.addEventListener("touchcancel", () => toggleTabActive(tabChat, false));
+	}
 	  
 	  chatInput.dataset.lastLineCount = (chatInput.value.match(/\n/g) || []).length;
       nameInput.focus();
@@ -1096,8 +1354,9 @@ async function uploadToImageBed(file) {
       loginForm.style.display = "none";
       if (userListPage) {
         userListPage.style.display = "block"; 
-		tabUserList.classList.add("active");
-		tabChat.classList.remove("active");
+		//tabUserList.classList.add("active");
+		//tabUserList.classList.remove("active"); 
+		// tabChat.classList.remove("active");
       }
       chatroom.style.display = "none";
       backBtn.style.display = "block";
@@ -1234,15 +1493,14 @@ async function uploadToImageBed(file) {
 				console.log("跳过自己发送的图片消息，避免重复");
 				return;
 			  }
-			  // 原有DOM匹配逻辑（兜底）
-			  if (data.isImage && data.name === username && data.msgId) {
-				const existingBubble = document.querySelector(`.bubble[data-msg-id="${data.msgId}"]`);
-				if (existingBubble) {
-				  console.log("跳过自己发送的图片消息重复渲染");
-				  return;
-				}
-			  }
-			  // 正常渲染非图片/他人消息
+			  
+			  
+			  // 只要标记 isImage:true 就是图片消息，无需校验后缀
+			const isImageMsg = data.isImage || (data.message.startsWith("http") && 
+			  (data.message.endsWith(".jpg") || data.message.endsWith(".png") || 
+			   data.message.endsWith(".gif") || data.message.endsWith(".webp")));
+			  
+			  // 正常渲染消息
 			  if (data.timestamp > lastSeenTimestamp) {
 				const userName = data.name ? data.name : "未知用户";
 				const isSelf = userName === username;
@@ -1250,7 +1508,8 @@ async function uploadToImageBed(file) {
 				  isSelf ? "我" : userName,
 				  data.message.trim(),
 				  false,
-				  isSelf
+				  isSelf,
+				  isImageMsg // 传递图片消息标记
 				);
 				lastSeenTimestamp = data.timestamp;
 			  }
@@ -1290,28 +1549,94 @@ async function uploadToImageBed(file) {
       }
     }
 
-    // ========== 添加消息：仅做简单格式化 ==========
-    function addChatMessage(name, text, isSystem = false, isSelf = false) {
-	  // 过滤空/无效消息
-	  if (text === undefined || text === null || text.trim() === "") {
-		console.log("忽略空/undefined消息");
-		return;
-	  }
-	  if (typeof text === "string" && text.toLowerCase() === "undefined") {
-		console.log("忽略'undefined'字符串消息");
-		return;
-	  }
-	  
-      console.log("添加消息:", { name, text, isSystem, isSelf });
-      
-      const msgDiv = document.createElement("div");
-      msgDiv.className = isSystem ? "system-msg" : `msg ${isSelf ? "right" : "left"}`;
+    // ========== 添加消息：区分文字/图片（核心修改） ==========
+    function addChatMessage(name, text, isSystem = false, isSelf = false, isImage = false) {
 
+	  // 过滤空/无效消息：图片消息允许 text 为空（乐观渲染）
+		if (!isImage && (text === undefined || text === null || text.trim() === "")) {
+		  console.log("忽略空/undefined文字消息");
+		  return;
+		}
+		if (typeof text === "string" && text.toLowerCase() === "undefined") {
+		  console.log("忽略'undefined'字符串消息");
+		  return;
+		}
+			  
+      console.log("添加消息:", { name, text, isSystem, isSelf, isImage });
+      
+      // 系统消息：原有逻辑
       if (isSystem) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "system-msg";
         const span = document.createElement("span");
         span.textContent = text;
         msgDiv.appendChild(span);
-      } else {
+        chatlog.appendChild(msgDiv);
+      } 
+      // 图片消息：无气泡，固定尺寸
+      else if (isImage) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `msg-img ${isSelf ? "right" : "left"}`;
+	
+		// new add
+		const contentContainer = document.createElement("div");
+		  contentContainer.className = "msg-content"; // 复用文字消息的容器类，保证对齐
+		  contentContainer.style.display = "flex";
+		  contentContainer.style.flexDirection = "column"; // 垂直排列（昵称在上，图片在下）
+		  contentContainer.style.alignItems = isSelf ? "flex-end" : "flex-start"; // 跟随左右对齐
+
+		// new  add
+		
+        // 非自己的消息显示用户名
+        if (!isSelf && name) {
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "img-username";
+          nameSpan.textContent = name;
+          // msgDiv.appendChild(nameSpan);
+		  contentContainer.appendChild(nameSpan); // ✅ 正确：加到contentContainer中
+        }
+
+        // 固定尺寸图片容器
+        const contentDiv = document.createElement("div");
+        contentDiv.className = "img-content";
+        
+        // 乐观渲染加载中
+        contentDiv.innerHTML = `<div class="img-loading">图片加载中...</div>`;
+        
+        // 如果是已上传的图片，直接加载
+        if (text.startsWith("http")) {
+          const img = new Image();
+          img.onload = () => {
+            contentDiv.innerHTML = `<img src="${text}" onclick="window.open('${text}', '_blank')">`;
+          };
+          img.onerror = () => {
+            contentDiv.innerHTML = `
+              <div class="img-error">
+                <svg viewBox="0 0 24 24">
+                  <path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                  <path d="M12 10l-2 2 2 2 2-2-2-2zm0-6v2h2V4h-2zm0 12v2h2v-2h-2z"/>
+                </svg>
+                <span>图片加载失败</span>
+              </div>
+            `;
+          };
+          img.src = text;
+        }
+		
+		contentContainer.appendChild(contentDiv); // ✅ 正确：添加到contentContainer
+		  // 把contentContainer添加到msgDiv
+		  msgDiv.appendChild(contentContainer); // ✅ 最终拼接
+		  chatlog.appendChild(msgDiv);
+		
+        // msgDiv.appendChild(contentDiv);
+        // chatlog.appendChild(msgDiv);
+		
+      }
+      // 文字消息：保留原有气泡
+      else {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `msg ${isSelf ? "right" : "left"}`;
+
         const contentDiv = document.createElement("div");
         contentDiv.className = "msg-content";
 
@@ -1324,15 +1649,13 @@ async function uploadToImageBed(file) {
 
         const bubbleDiv = document.createElement("div");
         bubbleDiv.className = "bubble";
-        // 仅做极简格式化：换行 + 第一个URL转可点击
-		
         bubbleDiv.innerHTML = formatMessageText(text);
         contentDiv.appendChild(bubbleDiv);
-        
         msgDiv.appendChild(contentDiv);
+        chatlog.appendChild(msgDiv);
       }
 
-      chatlog.appendChild(msgDiv);
+      // 滚动到底部
       if (isAtBottom) {
         chatlog.scrollBy(0, 1e8);
       }
