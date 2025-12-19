@@ -84,14 +84,18 @@ export class ChatRoom {
     this.storage = state.storage;
     this.env = env;
     this.sessions = new Map();
+    this.onlineUsers = new Set();
+    
     this.state.getWebSockets().forEach((webSocket) => {
-      let meta = webSocket.deserializeAttachment();
-      let limiterId = this.env.limiters.idFromString(meta.limiterId);
+	  let meta = webSocket.deserializeAttachment() || {}; // 兜底空对象
+	  let limiterId = this.env.limiters.idFromString(meta.limiterId || ""); // 兜底空字符串
       let limiter = new RateLimiterClient(
         () => this.env.limiters.get(limiterId),
         err => webSocket.close(1011, err.stack));
       let blockedMessages = [];
       this.sessions.set(webSocket, { ...meta, limiter, blockedMessages });
+      // 恢复重连用户到在线列表
+      if (meta.name) this.onlineUsers.add(meta.name);
     });
     this.lastTimestamp = 0;
   }
@@ -122,18 +126,34 @@ export class ChatRoom {
         () => this.env.limiters.get(limiterId),
         err => webSocket.close(1011, err.stack));
     let session = { limiterId, limiter, blockedMessages: [] };
-    webSocket.serializeAttachment({ ...webSocket.deserializeAttachment(), limiterId: limiterId.toString() });
+    // webSocket.serializeAttachment({ ...webSocket.deserializeAttachment(), limiterId: limiterId.toString() });
+	webSocket.serializeAttachment({ ...(webSocket.deserializeAttachment() || {}), limiterId: limiterId.toString() });
     this.sessions.set(webSocket, session);
+
+    // 预加载历史在线用户到新连接的阻塞消息中
+    session.blockedMessages.push(JSON.stringify({
+      onlineUsers: Array.from(this.onlineUsers)
+    }));
 
     for (let otherSession of this.sessions.values()) {
       if (otherSession.name) {
-        session.blockedMessages.push(JSON.stringify({joined: otherSession.name}));
+        session.blockedMessages.push(JSON.stringify({
+          type: "system", // 新增类型标记
+          joined: otherSession.name
+        }));
       }
     }
 
     let storage = await this.storage.list({reverse: true, limit: 100});
-    let backlog = [...storage.values()];
-    backlog.reverse();
+    let backlog = [...storage.values()].reverse().filter(item => {
+      try {
+        const msg = JSON.parse(item);
+        // 只保留有效聊天消息（必须有name/message/timestamp）
+        return !!msg && typeof msg === "object" && !!msg.name && !!msg.message && !!msg.timestamp;
+      } catch (e) {
+        return false; // 解析失败的消息直接过滤
+      }
+    });
     backlog.forEach(value => {
       session.blockedMessages.push(value);
     });
@@ -154,7 +174,50 @@ export class ChatRoom {
         return;
       }
 
-      let data = JSON.parse(msg);
+	  let data = JSON.parse(msg || "{}"); // 兜底空字符串
+
+      // 新增：处理客户端的getUsers请求
+      if (data.type === 'getUsers') {
+		  webSocket.send(JSON.stringify({
+			type: "system",
+			onlineUsers: Array.from(this.onlineUsers)
+		  }));
+		  return;
+		}
+
+      // 新增：处理心跳请求（避免客户端断连）
+      if (data.type === 'heartbeat') {
+        webSocket.send(JSON.stringify({type: 'heartbeat', time: Date.now()}));
+        return;
+      }
+
+      // 新增：处理历史消息请求
+      if (data.type === 'getHistory') {
+        let storage = await this.storage.list({reverse: true, limit: 100});
+		
+        let backlog = [...storage.values()].reverse().map(item => {
+          try {
+            const msg = JSON.parse(item);
+            // 给缺失字段兜底，避免前端undefined
+            return {
+              name: msg.name || "未知用户",
+              message: msg.message || "",
+              timestamp: msg.timestamp || Date.now(),
+              isImage: !!msg.isImage, // 布尔值兜底
+              clientId: msg.clientId || "",
+              messageId: msg.messageId || ""
+            };
+          } catch (e) {
+            return null; // 解析失败返回null
+          }
+        }).filter(Boolean); // 过滤null/undefined
+		
+        webSocket.send(JSON.stringify({
+			type: "history",
+			history: backlog // backlog已经是处理好的对象数组
+		}));
+		  return;
+      }
 
       if (!session.name) {
         session.name = "" + (data.name || "anonymous");
@@ -164,27 +227,43 @@ export class ChatRoom {
           webSocket.close(1009, "Name too long.");
           return;
         }
+        // 新增：将用户加入在线列表
+        this.onlineUsers.add(session.name);
+        
         session.blockedMessages.forEach(queued => {
           webSocket.send(queued);
         });
         delete session.blockedMessages;
-        this.broadcast({joined: session.name});
+        
+        // 标记系统消息，避免混入历史记录
+        this.broadcast({
+          type: "system",
+          joined: session.name,
+          onlineUsers: Array.from(this.onlineUsers)
+        });
+        
         webSocket.send(JSON.stringify({ready: true}));
         return;
       }
 
-      // data = { name: session.name, message: "" + data.message };
-	  data = {
-		...data, // 先继承前端发送的所有字段
-		name: session.name, // 强制使用会话中的用户名（防止伪造）
-		message: "" + data.message // 确保消息是字符串
-	  };
+      // 处理普通消息
+      data = {
+        ...data, 
+        type: "chat", // 新增类型标记
+        name: session.name || "未知用户", 
+        message: "" + (data.message || ""), // 兜底空字符串
+        // isImage: !!data.isImage, // 布尔值兜底
+		isImage: !!data.isImage || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(data.message), 
+        clientId: data.clientId || "",
+        messageId: data.messageId || "",
+        timestamp: Math.max(Date.now(), this.lastTimestamp + 1)
+      };
       if (data.message.length > 256) {
         webSocket.send(JSON.stringify({error: "Message too long."}));
         return;
       }
 
-      data.timestamp = Math.max(Date.now(), this.lastTimestamp + 1);
+      // data.timestamp = Math.max(Date.now(), this.lastTimestamp + 1);
       this.lastTimestamp = data.timestamp;
 
       let dataStr = JSON.stringify(data);
@@ -194,27 +273,24 @@ export class ChatRoom {
       let key = new Date(data.timestamp).toISOString();
       await this.storage.put(key, dataStr);
 
-      // ========== 核心修改：自动清理7天前的旧消息 ==========
+      // 清理7天前的旧消息
       const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-		const sevenDaysAgoISO = new Date(sevenDaysAgo).toISOString();
-		let oldMessages = await this.storage.list({end: sevenDaysAgoISO});
-		let oldKeys = [...oldMessages.keys()];
-		// 优化：分批次删除（每批10条），避免一次性删除过多阻塞
-		if (oldKeys.length > 0) {
-		  const batchSize = 10;
-		  for (let i = 0; i < oldKeys.length; i += batchSize) {
-			const batch = oldKeys.slice(i, i + batchSize);
-			// ✅ 新增：捕获单条删除错误，不影响整批
-			await Promise.all(batch.map(async (key) => {
-			  try {
-				await this.storage.delete(key);
-			  } catch (err) {
-				console.error(`删除旧消息失败: ${key}`, err);
-			  }
-			}));
-		  }
-		}
-      // ====================================================
+      const sevenDaysAgoISO = new Date(sevenDaysAgo).toISOString();
+      let oldMessages = await this.storage.list({end: sevenDaysAgoISO});
+      let oldKeys = [...oldMessages.keys()];
+      if (oldKeys.length > 0) {
+        const batchSize = 10;
+        for (let i = 0; i < oldKeys.length; i += batchSize) {
+          const batch = oldKeys.slice(i, i + batchSize);
+          await Promise.all(batch.map(async (key) => {
+            try {
+              await this.storage.delete(key);
+            } catch (err) {
+              console.error(`删除旧消息失败: ${key}`, err);
+            }
+          }));
+        }
+      }
 
     } catch (err) {
       webSocket.send(JSON.stringify({error: err.stack}));
@@ -225,8 +301,15 @@ export class ChatRoom {
     let session = this.sessions.get(webSocket) || {};
     session.quit = true;
     this.sessions.delete(webSocket);
+    
+    // ✅ 新增：从在线列表移除用户
     if (session.name) {
-      this.broadcast({quit: session.name});
+      this.onlineUsers.delete(session.name);
+		this.broadcast({
+		  type: "system",
+		  quit: session.name,
+		  onlineUsers: Array.from(this.onlineUsers)
+		});
     }
   }
 
@@ -239,34 +322,68 @@ export class ChatRoom {
   }
 
   broadcast(message) {
-	if (!message || (typeof message === "string" && message.trim() === "")) {
+	  if (!message || (typeof message === "string" && message.trim() === "")) {
 		console.warn("忽略空消息广播");
 		return;
-    }
-    if (typeof message !== "string") {
-      message = JSON.stringify(message);
-    }
-    let quitters = [];
-    this.sessions.forEach((session, webSocket) => {
-      if (session.name) {
-        try {
-          webSocket.send(message);
-        } catch (err) {
-          session.quit = true;
-          quitters.push(session);
-          this.sessions.delete(webSocket);
-        }
-      } else {
-        session.blockedMessages.push(message);
-      }
-    });
-    quitters.forEach(quitter => {
-      if (quitter.name) {
-        this.broadcast({quit: quitter.name});
-      }
-    });
-  }
+	  }
+	  
+	  // ✅ 修复：先判断message类型，避免重复JSON.parse/stringify
+	  let msgObj;
+	  if (typeof message === "string") {
+		// 字符串类型：尝试解析为JSON
+		try {
+		  msgObj = JSON.parse(message);
+		} catch (e) {
+		  console.error("广播消息解析失败:", e, message);
+		  return;
+		}
+	  } else if (typeof message === "object" && message !== null) {
+		// 对象类型：直接使用
+		msgObj = message;
+	  } else {
+		console.warn("无效的广播消息类型:", typeof message);
+		return;
+	  }
+
+	  // 给消息加类型标记
+	  if (!msgObj.type) {
+		if (msgObj.joined || msgObj.quit || msgObj.onlineUsers) {
+		  msgObj.type = "system";
+		} else {
+		  msgObj.type = "chat";
+		}
+	  }
+
+	  // 最终序列化为JSON字符串发送
+	  const messageStr = JSON.stringify(msgObj);
+
+	  let quitters = [];
+	  this.sessions.forEach((session, webSocket) => {
+		if (session.name) {
+		  try {
+			webSocket.send(messageStr);
+		  } catch (err) {
+			session.quit = true;
+			quitters.push(session);
+			this.sessions.delete(webSocket);
+		  }
+		} else {
+		  session.blockedMessages.push(messageStr);
+		}
+	  });
+
+	  quitters.forEach(quitter => {
+		if (quitter.name) {
+		  this.broadcast({
+			type: "system",
+			quit: quitter.name,
+			onlineUsers: Array.from(this.onlineUsers)
+		  });
+		}
+	  });
+	}
 }
+//----------------------------------
 
 // RateLimiter Durable Object Class
 export class RateLimiter {
