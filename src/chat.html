@@ -49,11 +49,11 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 44px;
+      height: 50px;
       background-color: #fff; /* 微信风格白色背景 */
       color: #000; /* 黑色文字 */
       font-size: 18px;
-      line-height: 44px;
+      line-height: 60px;
       text-align: center;
       padding: 0 15px; /* 调整内边距 */
       z-index: 100;
@@ -64,7 +64,7 @@
     .header-btn {
 	  position: absolute;
 	  top: 0;
-	  height: 44px;
+	  height: 50px;
 	  display: flex;
 	  align-items: center;
 	  justify-content: center;
@@ -108,7 +108,7 @@
 	  bottom: 0;
 	  background-color: #EDEDED;
 	  padding-top: 0; /* 把之前的80px改成0 */
-	  z-index: 90;
+	  z-index: 110;
     }
     
     .login-container {
@@ -145,7 +145,7 @@
     }
     
     .input-underline:focus {
-      border-bottom-color: #07C160;
+      border-bottom-color: #77cc00;
     }
     
     .enter-btn {
@@ -153,12 +153,12 @@
       width: 100%;
       height: 48px;
       line-height: 48px;
-      background-color: #07C160;
+      background-color: #77cc00;
       color: #fff;
       text-align: center;
       font-size: 16px;
       font-weight: 500;
-      border-radius: 24px;
+      border-radius: 2px;
       margin: 30px 0;
       box-shadow: 0 2px 8px rgba(7, 193, 96, 0.3);
       text-decoration: none;
@@ -170,24 +170,24 @@
     
     .login-footer {
       position: fixed;
-	  top: 85%; /* 距离顶部70%高度位置，可改具体像素如400px */
+	  top: auto; /* 距离顶部70%高度位置，可改具体像素如400px */
 	  left: 0;
 	  right: 0;
 	  text-align: center;
 	  font-size: 14px;
 	  color: #999;
-	  bottom: auto; /* 覆盖原有bottom值 */
+	  bottom: 40px; /* 覆盖原有bottom值 */
     }
     
     .login-footer a {
-      color: #07C160;
+      color: #77cc00;
       text-decoration: none;
     }
 
     /* 聊天页面 */
 	.chat-page {
 	  position: fixed;
-	  top: 44px;
+	  top: 50px;
 	  left: 0;
 	  right: 0;
 	  bottom: 50px; /* 与输入栏最小高度一致 */
@@ -249,7 +249,7 @@
     }
     
     .msg-right .msg-bubble {
-      background-color: #07C160;
+      background-color: #77cc00;
       color: #fff;
       border-bottom-right-radius: 4px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -427,7 +427,7 @@
 	  height: 36px; /* 与输入框等高 */
 	  line-height: 36px;
 	  text-align: center;
-	  background-color: #07C160;
+	  background-color: #77cc00;
 	  color: #fff;
 	  border-radius: 2px;
 	  font-size: 15px;
@@ -450,7 +450,7 @@
     /* 用户列表页面 */
     .user-list-page {
 	  position: fixed;
-	  top: 44px; /* 导航栏高度是44px，这个值必须和导航栏高度一致，紧贴导航栏底部 */
+	  top: 50px; /* 导航栏高度是44px，这个值必须和导航栏高度一致，紧贴导航栏底部 */
 	  left: 0;
 	  right: 0;
 	  bottom: 0;
@@ -602,7 +602,6 @@
       <path d="M12 14.5L7.5 10L12 5.5" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
-    <span id="room-title">chatroom</span>
     <div class="header-btn share-btn clickable hide">分享聊天室</div>
     <span class="connect-status hide">未连接</span>
   </div>
@@ -610,6 +609,19 @@
   <!-- 登录页面 -->
   <div class="login-page" id="loginPage">
     <div class="login-container">
+		<div class="login-logo" style="text-align: center; margin-bottom: 30px;">
+		<!-- 粘贴优化后的 SVG Logo 代码 -->
+		<svg width="196" height="40" viewBox="0 0 196 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+		  <text x="70" y="28" 
+				font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+				font-size="24" 
+				font-weight="600" 
+				text-anchor="middle">
+			<tspan fill="#77cc00">CF</tspan>
+			<tspan fill="#333333" y="28" dx="5">Chat</tspan>
+		  </text>
+		</svg>
+	  </div>
       <div class="input-item">
         <input type="text" id="nameInput" class="input-underline" placeholder="请输入你的昵称" autocomplete="off">
       </div>
@@ -1352,7 +1364,7 @@ function updateUserList() {
 		toggleElement(els.userListPage, true);
 		toggleElement(els.backBtn, true);
 		toggleElement(els.shareBtn, true);
-		els.roomTitle.textContent = "chatroom";
+
 
 		// 更新URL（写入私人ID）
 		location.hash = privateRoomId;
@@ -1386,7 +1398,7 @@ function updateUserList() {
 	  toggleElement(els.chatPage, true);      // 显示聊天页
 	  toggleElement(els.backBtn, true);
 	  toggleElement(els.shareBtn, true);
-	  els.roomTitle.textContent = "chatroom";
+
 
 	  // 更新URL hash（刷新页面也能保留房间）
 	  location.hash = roomId;
@@ -1500,30 +1512,39 @@ function updateUserList() {
       els.backBtn.addEventListener('click', goBack);
       
       // 分享按钮
-	  els.shareBtn.addEventListener('click', () => {
+	  els.shareBtn.addEventListener('click', async () => {
 		  const roomUrl = `${location.origin}${location.pathname}#${state.roomname}`;
-		  // 直接复制到剪贴板，兼容所有浏览器
-		  navigator.clipboard.writeText(roomUrl)
-			.then(() => {
-			  alert('私人房间链接已复制到剪贴板！');
-			})
-			.catch((err) => {
-			  // 降级方案：弹窗让用户手动复制
-			  prompt('复制私人房间链接（请手动复制）', roomUrl);
+		  const shareTitle = 'Cloudflare 私人聊天室';
+		  const shareText = '邀请你加入我的私人聊天室，点击链接即可进入';
+
+		  try {
+			await navigator.share({
+			  title: shareTitle,
+			  text: shareText,
+			  url: roomUrl
 			});
+			console.log('分享成功');
+		  } catch (err) {
+			// 关键：只处理 "不支持 API" 的错误，忽略用户主动取消
+			// AbortError 是用户关闭分享面板触发的错误
+			if (err.name !== 'AbortError') {
+			  console.log('Web Share API 不支持，降级为复制链接', err);
+			  try {
+				await navigator.clipboard.writeText(roomUrl);
+				alert('私人房间链接已复制到剪贴板，你可以手动分享～');
+			  } catch (clipboardErr) {
+				prompt('复制私人房间链接（请手动复制）', roomUrl);
+			  }
+			} else {
+			  // 用户主动取消分享，什么都不做
+			  console.log('用户取消了分享');
+			}
+		  }
 		});
-	  /*
-      els.shareBtn.addEventListener('click', () => {
-        const url = location.href;
-        navigator.clipboard.writeText(url)
-          .then(() => alert('房间链接已复制'))
-          .catch(() => prompt('复制链接', url));
-      }); */
-      
+
       // 发送消息
       els.sendBtn.addEventListener('click', sendMessage);
       
-		// 替换原回车事件监听
 // 替换原回车事件监听（简化版：无论是否有文字，回车直接换行）
 //-----------------------------
 function isEmptyContent() {
@@ -1531,19 +1552,6 @@ function isEmptyContent() {
   return content === '' || content === '<br>';
 }
 
-// 调整输入框高度函数（放在工具函数区域）
-/*
-function adjustHeight() {
-  els.chatInput.style.height = 'auto';
-  const newHeight = Math.min(els.chatInput.scrollHeight, 120);
-  els.chatInput.style.height = newHeight + 'px';
-  
-  if (els.chatInput.scrollHeight > els.chatInput.clientHeight) {
-    els.chatInput.scrollTop = els.chatInput.scrollHeight;
-  }
-}
-*/
-//---------------
 els.chatInput.addEventListener('focus', () => {
   if (isEmptyContent()) {
     els.chatInput.innerHTML = '';
