@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <title>Cloudflare Chatroom</title>
+  <title>CF Chat</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuMDAwMSAxNC41TDcuNTAwMSAxMEMxMi41MDAxIDEwIDEyLjUwMDEgMTAgMTcuNTAwMSAxMCIgc3Ryb2tlPSIjNzdjYzAwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+PC9zdmc+" type="image/svg+xml">
   <style>
     /* 全局重置 & iOS字体 + 微信风格基础样式 */
     * {
@@ -45,56 +46,72 @@
 
     /* 顶部导航栏（微信风格：白色背景 + 底部黑线） */
     .header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 50px;
-      background-color: #fff; /* 微信风格白色背景 */
-      color: #000; /* 黑色文字 */
-      font-size: 18px;
-      line-height: 60px;
-      text-align: center;
-      padding: 0 15px; /* 调整内边距 */
-      z-index: 100;
-      border-bottom: 1px solid #E5E5E5; /* 底部黑线 */
-    }
-    
-    /* 导航栏按钮：黑色文字 */
-    .header-btn {
-	  position: absolute;
+	  position: fixed;
 	  top: 0;
-	  height: 50px;
-	  display: flex;
-	  align-items: center;
-	  justify-content: center;
-	  color: #000;
-	  font-size: 16px;
+	  left: 0;
+	  right: 0;
+	  height: 50px; /* 和底部选项卡高度一致 */
+	  background-color: #fff; /* 与底部选项卡背景一致 */
+	  border-bottom: 1px solid #E5E5E5; /* 与底部选项卡顶部边框一致 */
+	  display: flex; /* 复用底部选项卡布局方式 */
+	  z-index: 100;
+	  /* 无内边距，按钮直接填充 */
 	  padding: 0;
-	  border: none;
-	  background: transparent;
-	  /* 核心：固定按钮点击区域，同时加内边距避免贴边 */
-	  width: auto; /* 取消固定宽度，适配内容 */
-	  padding: 0 15px; /* 左右内边距，远离边缘 */
-	  -webkit-user-select: none;  /* 禁止文字选中 */
+	}
+    	
+    /* 导航栏按钮：改为底部选项卡.tab-item同款样式 */
+	.header-tab-item {
+	  /* 与底部选项卡完全一致的宽度设置 */
+	  flex: 0 0 50%;
+	  max-width: 50%;
+	  height: 100%;
+	  display: flex;
+	  align-items: center; /* 垂直居中 */
+	  justify-content: center; /* 水平居中（文字居中，与底部一致） */
+	  font-size: 16px; /* 与底部选项卡字体大小一致 */
+	  color: #000 !important; /* 与底部选项卡文字颜色一致 */
+	  font-weight: 500; /* 与底部选项卡字体粗细一致 */
+	  position: relative;
+	  cursor: pointer;
+	  -webkit-tap-highlight-color: transparent;
+	  transition: all 0.1s ease;
+	  -webkit-user-select: none;
 	  -moz-user-select: none;
 	  -ms-user-select: none;
 	  user-select: none;
 	}
-	
-    .header-btn.back-btn {
-	  z-index: 101; /* 确保返回按钮在最上层 */
+
+	/* 返回按钮左侧分隔线（和底部选项卡.decorative-tab一致） */
+	.header-tab-item.decorative-tab::after,
+	.tab-item.decorative-tab::after {
+	  content: "";
+	  position: absolute;
+	  right: 0; /* 卡在两个按钮中间，与底部分隔线对齐 */
+	  top: 0;
+	  bottom: 0;
+	  width: 2px; /* 与底部分隔线宽度一致 */
+	  background-color: #E5E5E5; /* 与底部分隔线颜色一致 */
+	  height: 100%; /* 贯穿整个高度，与底部一致 */
 	}
-    .back-btn { left: 15px; }
-    .share-btn {
-	  right: 26px;
-	  width: auto;
-	  padding: 0 10px;
-	  /* 新增以下样式，和导航栏文字统一 */
-	  font-size: 16px; /* 和返回按钮字体一致 */
-	  line-height: 44px; /* 和导航栏高度一致，垂直居中 */
-	  font-weight: 500; /* 去掉加粗，和标题统一 */
-	  color: #000 !important; /* 确保是纯黑，和返回按钮一致 */
+
+	/* 按钮点击效果（和底部选项卡一致） */
+	.header-tab-item:active,
+	.tab-item:active {
+	  opacity: 0.8;
+	  background-color: #f5f5f5;
+	  border-radius: 4px;
+	}
+
+	/* 保留原有header-btn类的兼容性（不影响功能） */
+	.header-btn {
+	  border: none;
+	  background: transparent;
+	  outline: none;
+	}
+
+	/* 调整返回按钮图标垂直居中 */
+	.back-btn svg {
+	  vertical-align: middle;
 	}
     /* 移除连接状态显示 */
     .connect-status { display: none !important; }
@@ -231,6 +248,7 @@
       color: #999;
       margin-bottom: 4px;
       padding-left: 2px;
+	  display: none !important;
     }
     
     .msg-bubble {
@@ -250,7 +268,7 @@
     
     .msg-right .msg-bubble {
       background-color: #77cc00;
-      color: #fff;
+      color: #000 !important;
       border-bottom-right-radius: 4px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
@@ -261,85 +279,43 @@
       word-break: break-all;
     }
     
-    .msg-right .msg-bubble a { color: #E5F8FF; }
+    .msg-right .msg-bubble a { color: blue !important }
     
     /* 隐藏系统消息（谁加入/离开房间） */
     .system-msg { display: none !important; }
 
-    /* 图片消息（移除头像 + 昵称上下结构） */
-    .img-msg {
-      display: flex;
-      margin-bottom: 12px;
-      max-width: 100%;
-      flex-direction: column; /* 纵向排列昵称和图片 */
-    }
+    /* 消息状态样式：发送中/失败 */
+	.msg-status-wrapper {
+	  text-align: right;
+	  margin-top: 4px;
+	  font-size: 12px;
+	}
+	.msg-status {
+	  color: #999;
+	}
+	.msg-status.sending { color: #999; }
+	.msg-status.success { color: #07C160; }
+	.msg-status.fail { color: #d32f2f; }
     
-    .img-msg-left { align-items: flex-start; margin-right: 20%; }
-    .img-msg-right { align-items: flex-end; margin-left: 20%; }
-    
-    .img-content {
-      max-width: 80%;
-    }
-    
-    .img-name {
-      font-size: 12px;
-      color: #999;
-      margin-bottom: 4px;
-      padding-left: 2px;
-    }
-    
-    .img-bubble {
-      width: 180px;
-      height: 120px;
-      border-radius: 8px;
-      overflow: hidden;
-      background-color: #E5E5E5;
-      position: relative;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    
-    .img-loading, .img-error {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #999;
-      font-size: 14px;
-    }
-    
-    .img-error svg {
-      width: 40px;
-      height: 40px;
-      fill: #ccc;
-      margin-bottom: 8px;
-      font-size: 12px;
-    }
-    
-    .img-bubble img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
     /* 底部输入栏（微信风格） */
-.input-bar {
-  position: fixed;
-  bottom: 0; /* 改回0，避免1px间隙 */
-  left: 0;
-  right: 0;
-  height: auto;
-  min-height: 50px;
-  background-color: #fff;
-  border-top: 1px solid #E5E5E5;
-  padding: 7px 15px;
-  display: flex;
-  align-items: flex-end; /* 所有子元素底部对齐 */
-  justify-content: flex-start; /* 左对齐 */
-  z-index: 90;
-}
+	.input-bar {
+	  position: fixed;
+	  bottom: 0; /* 改回0，避免1px间隙 */
+	  left: 0;
+	  right: 0;
+	  height: auto;
+	  min-height: 50px;
+	  background-color: #fff;
+	  border-top: 1px solid #E5E5E5;
+	  padding: 7px 15px;
+	  display: flex;
+	  align-items: flex-end; /* 所有子元素底部对齐 */
+	  justify-content: flex-start; /* 左对齐 */
+	  z-index: 90;
+	  /* 新增：调整内边距，适配下划线输入框 */
+	  padding-left: 12px;
+	  padding-right: 12px;
+	}
     
     
 .input-tools {
@@ -373,36 +349,43 @@
       background-color: #E5E5E5;
     }
     
-.chat-input {
-  flex: 1;
-  min-height: 36px;
-  max-height: 120px;
-  padding: 8px 12px;
-  background-color: #fff;
-  border-radius: 2px;
-  border: 1px solid #E5E5E5;
-  outline: none;
-  font-size: 15px;
-  line-height: 22px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: #E5E5E5 #fff;
-  display: block;
-  box-sizing: border-box;
-  /* 关键：固定底部，仅向上扩展 */
-  align-self: flex-end;
-  vertical-align: bottom;
-}
-
+	.chat-input {
+	  flex: 1;
+	  height: 36px; /* 与 min-height 一致，固定初始高度 */
+	  min-height: 36px;
+	  max-height: 120px;
+	  padding: 8px 0;
+	  background-color: transparent;
+	  border: none;
+	  border-bottom: 1px solid #D9D9D9;
+	  border-radius: 0;
+	  outline: none;
+	  font-size: 15px;
+	  line-height: 22px;
+	  white-space: pre-wrap;
+	  word-wrap: break-word;
+	  overflow-y: auto; /* 保留滚动功能 */
+	  scrollbar-width: none; /* 关键1：Firefox - 隐藏滚动条且不占位 */
+	  -ms-overflow-style: none; /* 关键2：IE/Edge - 隐藏滚动条且不占位 */
+	  display: flex;
+	  flex-direction: column;
+	  justify-content: flex-start;
+	  align-self: flex-end;
+	  vertical-align: top;
+	  text-align: left;
+	  box-sizing: border-box;
+	}
+	
+	.chat-input::-webkit-scrollbar {
+	  display: none !important; /* 替代原有 width: 4px; 彻底隐藏 */
+	}
 .chat-input br {
   display: block;
 }
 .chat-input:not(:empty) br {
   display: block;
   content: "";
-  margin-top: 22px; /* 与行高一致，模拟换行间距 */
+  
 }
 .chat-input:empty:before {
   content: attr(placeholder);
@@ -420,7 +403,8 @@
 }
     
 .chat-input:focus {
-	border-width: 1px !important; /* 确保边框宽度不变 */
+  border-bottom-color: #77cc00 !important;
+  box-shadow: none !important; /* 移除默认聚焦阴影，保持简洁 */
 }
 	.send-btn {
 	  width: 60px;
@@ -428,7 +412,7 @@
 	  line-height: 36px;
 	  text-align: center;
 	  background-color: #77cc00;
-	  color: #fff;
+	  color: #000 !important;
 	  border-radius: 2px;
 	  font-size: 15px;
 	  font-weight: 500;
@@ -552,15 +536,7 @@
   background-color: #f5f5f5;
   border-radius: 4px;
 }
-.decorative-tab::after {
-  content: "";                /* 生成伪元素 */
-  position: absolute;         /* 绝对定位 */
-  right: 0;                   /* 卡在用户选项卡最右侧（两选项卡中间） */
-  top: 0;                     /* 顶部对齐 */
-  height: 100%;               /* 贯穿整个高度 */
-  width: 2px;                 /* 竖线宽度 */
-  background-color: #E5E5E5;  /* 分隔线颜色（和顶部边框一致） */
-}
+
 .decorative-tab:active {
   opacity: 0.8;
   background-color: #f5f5f5;
@@ -571,6 +547,12 @@
 
     /* 移动端适配 */
   @media (max-width: 480px) {
+	  .chat-input {
+		min-height: 34px;
+		padding: 6px 10px;
+		line-height: 20px;
+		justify-content: flex-start !important;
+	  }
 	  .tab-item {
 		font-size: 14px;	
 	  }
@@ -583,42 +565,61 @@
 		  .tool-btn {
 			font-size: 26px; /* 移动端图标稍小一点，适配55px×34px容器 */
 		  }
-
 	  .send-btn { 
 		width: 55px; 
 		height: 34px; 
 		line-height: 34px; 
 		font-size: 14px; 
+		color: #000 !important; /* 移动端文字也为黑色 */
 	  }
     }
+	
+.tab-item.has-unread::after {
+  content: attr(data-unread); /* 动态显示未读数字 */
+  position: absolute;
+  top: 5px; /* 红点垂直位置：靠选项卡顶部 */
+  right: 20%; /* 红点水平位置：偏右，不遮挡「聊天」文字 */
+  min-width: 16px; /* 红点最小宽度，保证单个数字居中 */
+  height: 16px; /* 红点高度 */
+  line-height: 16px; /* 数字垂直居中 */
+  padding: 0 4px; /* 左右内边距，适配多数字/99+ */
+  background-color: #ff3b30; /* 微信经典红色，醒目不突兀 */
+  color: #ffffff; /* 数字颜色：白色 */
+  font-size: 12px; /* 数字字体大小 */
+  font-weight: 500; /* 数字加粗 */
+  border-radius: 8px; /* 圆角矩形，更美观（想要圆形就改50%） */
+  text-align: center; /* 数字水平居中 */
+  z-index: 10; /* 确保红点在文字上方显示 */
+  display: block;
+}
 
+/* 无未读消息时，隐藏红点 */
+.tab-item:not(.has-unread)::after {
+  display: none;
+}
+/* ========== 红点样式结束 ========== */
   </style>
 </head>
 <body>
-  <!-- 顶部导航：微信风格 + 仅显示标题/返回/分享 -->
-  <div class="header">
-    <div class="header-btn back-btn clickable hide">
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 14.5L7.5 10L12 5.5" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-  </div>
-    <div class="header-btn share-btn clickable hide">分享聊天室</div>
-    <span class="connect-status hide">未连接</span>
-  </div>
+<!-- 顶部导航：改为选项卡同款弹性布局 -->
+	<div class="header">
+	  <!-- 左侧：返回按钮（和底部选项卡样式统一） -->
+	  
+	  <div class="header-tab-item header-btn back-btn clickable hide">
+		返回上一页
+	  </div>
+	  <!-- 右侧：分享按钮（和底部选项卡样式统一） -->
+	  <div class="header-tab-item header-btn share-btn clickable hide">分享聊天室</div>
+	</div>
 
   <!-- 登录页面 -->
   <div class="login-page" id="loginPage">
     <div class="login-container">
 		<div class="login-logo" style="text-align: center; margin-bottom: 30px;">
-		<!-- 粘贴优化后的 SVG Logo 代码 -->
 		<svg width="196" height="40" viewBox="0 0 196 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-		  <text x="70" y="28" 
-				font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-				font-size="24" 
-				font-weight="600" 
-				text-anchor="middle">
+		  <text x="98" y="28" style="font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 24px; font-weight: 600; text-anchor: middle;">
 			<tspan fill="#77cc00">CF</tspan>
-			<tspan fill="#333333" y="28" dx="5">Chat</tspan>
+			<tspan fill="#333333" dx="4">Chat</tspan> <!-- 仅保留dx间距，移除x和dy -->
 		  </text>
 		</svg>
 	  </div>
@@ -652,7 +653,7 @@
     <div class="user-list-header" id="roomStatus">当前房间：暂无用户</div>
     <ul class="user-list" id="userList"></ul>
     <div class="tab-bar">
-      <div class="tab-item decorative-tab" id="tabUser">
+	  <div class="tab-item" id="tabUser">
         用户
       </div>
       <div class="tab-item clickable" id="tabChat">
@@ -664,31 +665,40 @@
   <script>
     // 核心配置
     const CONFIG = {
-      MAX_RECONNECT: 3,
+      MAX_RECONNECT: 5, // 增加重连次数
       RECONNECT_INTERVAL: 3000,
-      HEARTBEAT_INTERVAL: 10000,
+      HEARTBEAT_INTERVAL: 60000,
       IMGBB_API_KEY: "151fe87bf32e4e7837d1d4174d36b164",
-      MAX_IMG_SIZE: 10 * 1024 * 1024 // 10MB
+      MAX_IMG_SIZE: 10 * 1024 * 1024, // 10MB
+      MAX_MSG_RETRY: 3, // 单条消息最大重试次数
+      QUEUE_CLEANUP_INTERVAL: 60000 // 队列清理间隔
     };
 
-    // 全局状态
+    // 全局状态（简化版）
     const state = {
-	  ws: null,
-	  username: "",
-	  roomname: "",
-	  onlineUsers: [],
-	  isReconnecting: false,
-	  reconnectCount: 0,
-	  heartbeatTimer: null,
-	  reconnectTimer: null,
-	  isAtBottom: true,
-	  renderedMessages: new Map(), // 1. Set → Map（存储{消息ID: 发送者}）
-	  sentImageIds: new Set(),
-	  clientId: Math.random().toString(36).slice(2, 15) + Date.now(), // 2. 新增客户端唯一ID（加时间戳更唯一）
-	  messageQueue: [], // 新增：消息发送队列
-	  isSending: false, // 新增：是否正在发送
-	  sendThrottleTimer: null // 新增：节流定时器
-	};
+      ws: null,
+      username: "",
+      roomname: "",
+      onlineUsers: [],
+      isReconnecting: false,
+      reconnectCount: 0,
+      heartbeatTimer: null,
+      reconnectTimer: null,
+      isAtBottom: true,
+      renderedMessages: new Map(),
+      clientId: Math.random().toString(36).slice(2, 15) + Date.now(),
+      messageQueue: [],
+      isSending: false,
+      currentPage: "login",
+	  
+      unreadCount: parseInt(sessionStorage.getItem('chatUnreadCount')) || 0, // 从本地缓存读取
+	  hasUnread: sessionStorage.getItem('chatHasUnread') === 'true' || false, // 从本地缓存读取
+	  
+      wsStatus: "disconnected", // WebSocket状态：disconnected/connecting/connected
+      messageStatus: new Map(), // 消息发送状态：msgId -> {status: sending/success/fail, retry: 0}
+      queueCleanupTimer: null, // 队列清理定时器标识（新增）
+      isQueuePaused: false // 队列是否暂停（新增，标签页后台时暂停）
+    };
 
     // DOM 元素
     const els = {
@@ -696,7 +706,6 @@
       chatPage: document.getElementById('chatPage'),
       userListPage: document.getElementById('userListPage'),
       nameInput: document.getElementById('nameInput'),
-      // roomInput: document.getElementById('roomInput'),
       enterBtn: document.getElementById('enterBtn'),
       chatInput: document.getElementById('chatInput'),
       sendBtn: document.getElementById('sendBtn'),
@@ -704,19 +713,14 @@
       imageUpload: document.getElementById('imageUpload'),
       userList: document.getElementById('userList'),
       roomStatus: document.getElementById('roomStatus'),
-      roomTitle: document.getElementById('room-title'),
-      connectStatus: document.querySelector('.connect-status'),
-      backBtn: document.querySelector('.back-btn'),
-      shareBtn: document.querySelector('.share-btn'),
+      backBtn: document.querySelector('.header-tab-item.back-btn'),
+      shareBtn: document.querySelector('.header-tab-item.share-btn'),
       tabUser: document.getElementById('tabUser'),
       tabChat: document.getElementById('tabChat'),
       tabItems: document.querySelectorAll('.tab-item')
     };
-
-    // ========== 工具函数 ==========
-    /**
-     * 格式化消息文本（处理链接）
-     */
+	
+    // 格式化消息（URL转链接）
     function formatMessage(text) {
       if (!text) return '';
       const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -724,204 +728,232 @@
         .replace(/\n/g, '<br>')
         .replace(urlRegex, '<a href="$1" target="_blank">$1</a>');
     }
+	
+	// 生成唯一消息ID（新增：统一ID生成规则）
+	function generateUniqueMsgId() {
+	  return `${state.clientId}_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+	}
+	
 	function getUniqueMsgId(msg) {
-  // 兜底空对象
 	  const safeMsg = msg || {};
-	  // 所有字段强制兜底
-	  const name = safeMsg.name || "未知用户";
-	  const timestamp = safeMsg.timestamp || Date.now();
-	  const content = safeMsg.message || "";
-	  const contentHash = content ? btoa(unescape(encodeURIComponent(content.substring(0, 20)))) : "empty";
-	  
-	  return `${name}_${timestamp}_${contentHash}`;
+	  // 直接返回消息自带的messageId（前端发送时生成的）
+	  return safeMsg.messageId || generateUniqueMsgId();
 	}
 		
-	function adjustHeight() {
+    // 调整输入框高度
+    function adjustHeight() {
+	  // 先记录当前高度，避免重复计算
+	  const currentHeight = els.chatInput.offsetHeight;
 	  els.chatInput.style.height = 'auto';
-	  const newHeight = Math.min(els.chatInput.scrollHeight, 120);
-	  els.chatInput.style.height = newHeight + 'px';
 	  
+	  // 计算实际内容高度，限制最大高度
+	  const contentHeight = els.chatInput.scrollHeight;
+	  const maxHeight = 120;
+	  const targetHeight = Math.min(contentHeight, maxHeight);
+	  
+	  // 仅当目标高度与当前高度差异大于1px时，才更新高度（消除微小波动）
+	  if (Math.abs(targetHeight - currentHeight) > 1) {
+		els.chatInput.style.height = `${targetHeight}px`;
+	  }
+	  
+	  // 内容溢出时，自动滚动到底部（保留光标可见）
 	  if (els.chatInput.scrollHeight > els.chatInput.clientHeight) {
 		els.chatInput.scrollTop = els.chatInput.scrollHeight;
 	  }
 	}
-    /**
-     * 显示/隐藏元素
-     */
+
+	// 创建上传中临时气泡（修复：确保msgId绑定和图片标识）
+	function createUploadingMsgBubble() {
+	  // 仅生成一个msgId，作为消息唯一标识
+	  const msgId = generateUniqueMsgId();
+	  console.log("上传中msgId：", msgId);
+	  
+	  // 复用文字消息逻辑创建气泡，仅绑定msgId
+	  addTextMessage(
+		state.username,
+		"图片正在上传中……",
+		true, // 自己的消息
+		true, // 跳过格式化
+		msgId // 仅绑定msgId
+	  );
+	  
+	  // 强制查找并添加图片标识（避免后续查找不到）
+	  const msgDiv = els.chatlog.querySelector(`[data-msg-id="${msgId}"]`);
+	  if (msgDiv) {
+		msgDiv.dataset.isImageMsg = "true";
+		// 强制滚动到底部
+		els.chatlog.scrollTop = els.chatlog.scrollHeight;
+	  }
+	  
+	  return msgId; // 仅返回msgId
+	}
+
+    // 更新消息发送状态显示
+    function updateMessageStatusDisplay(msgId, status) {
+	  const msgDiv = els.chatlog.querySelector(`[data-msg-id="${msgId}"]`);
+	  if (!msgDiv) return;
+	  
+	  // 查找状态元素（自己的消息用.msg-status-wrapper）
+	  let statusDiv = msgDiv.querySelector('.msg-status');
+	  if (!statusDiv) {
+		const statusWrapper = msgDiv.querySelector('.msg-status-wrapper');
+		if (statusWrapper) {
+		  statusDiv = statusWrapper.querySelector('.msg-status');
+		}
+	  }
+	  
+	  if (!statusDiv) return;
+	  
+	  // 重置状态样式
+	  statusDiv.classList.remove('sending', 'success', 'fail');
+	  switch(status) {
+		case "sending":
+		  statusDiv.className = 'msg-status sending';
+		  statusDiv.textContent = "发送中";
+		  break;
+		case "success":
+		  statusDiv.className = 'msg-status success';
+		  statusDiv.textContent = "已发送";
+		  break;
+		case "fail":
+		  statusDiv.className = 'msg-status fail';
+		  statusDiv.textContent = "发送失败（点击重发）";
+		  statusDiv.onclick = () => retryFailedMessage(msgId);
+		  break;
+	  }
+	  
+	  scrollToBottom();
+	}
+
+    // 重试失败消息
+    function retryFailedMessage(msgId) {
+      // 查找消息
+      const targetIndex = state.messageQueue.findIndex(msg => {
+        const currentMsgId = getUniqueMsgId(msg);
+        return currentMsgId === msgId;
+      });
+      
+      if (targetIndex === -1) return;
+      
+      // 重置重试次数
+      const msgStatus = state.messageStatus.get(msgId) || { retry: 0, status: "fail" };
+      msgStatus.retry = 0;
+      msgStatus.status = "sending";
+      state.messageStatus.set(msgId, msgStatus);
+      
+      // 更新显示
+      updateMessageStatusDisplay(msgId, "sending");
+      
+      // 优先处理该消息
+      const targetMsg = state.messageQueue.splice(targetIndex, 1)[0];
+      state.messageQueue.unshift(targetMsg);
+      
+      // 触发队列处理
+      processMessageQueue();
+    }
+
+    // 显示/隐藏元素
     function toggleElement(el, show) {
       el.classList[show ? 'remove' : 'add']('hide');
     }
 
-    /**
-     * 切换选项卡
-     */
+    // 切换选项卡
     function activateTab(tab) {
       els.tabItems.forEach(item => item.classList.remove('active'));
       tab.classList.add('active');
     }
 
-    /**
-     * 调整输入框高度
-     */
-    /**
- * 调整输入框高度（精准版）
- * 解决：输入字符瞬间增高、清空不恢复、空/单行不滚动
- */
+    // 添加文字/图片消息（支持跳过格式化）
+    function addTextMessage(name, content, isSelf, skipFormat = false, msgId) {
+	  if (!content || content.trim() === '') return;
+	  const msgDiv = document.createElement('div');
+	  msgDiv.className = `msg ${isSelf ? 'msg-right' : 'msg-left'}`;
+	  if (msgId) {
+		msgDiv.dataset.msgId = msgId;
+	  }
+	  
+	  const contentDiv = document.createElement('div');
+	  contentDiv.className = 'msg-content';
+	  
+	  const bubble = document.createElement('div');
+	  bubble.className = 'msg-bubble';
+	  bubble.innerHTML = skipFormat 
+		? `${name}：${content}` 
+		: `${name}：${formatMessage(content)}`; 
+	  
+	  let statusDiv = null;
+	  if (isSelf && msgId) {
+		statusDiv = document.createElement('div');
+		statusDiv.className = 'msg-status-wrapper';
+		const statusText = document.createElement('div');
+		statusText.className = 'msg-status sending';
+		statusText.textContent = "发送中";
+		statusDiv.appendChild(statusText);
+	  }
+	  
+	  contentDiv.appendChild(bubble);
+	  if (statusDiv) {
+		contentDiv.appendChild(statusDiv);
+	  }
+	  msgDiv.appendChild(contentDiv);
+	  els.chatlog.appendChild(msgDiv);
+	  
+	  if (isSelf && msgId) {
+		state.messageStatus.set(msgId, {
+		  status: "sending",
+		  retry: 0
+		});
+	  }
+	  
+	  scrollToBottom();
+	}
 
-
-    // ========== 消息渲染 ==========
-    /**
-     * 添加系统消息（已隐藏，空实现）
-     */
-    function addSystemMessage(text) {
-      // 空实现：隐藏谁加入/离开房间的提示
-    }
-
-    /**
-     * 添加文字消息（移除头像 + 显示昵称 + 修复重复发送）
-     */
-    function addTextMessage(name, content, isSelf) {
-      if (!content || content.trim() === '') return;
-	  /*
-	  const msgData = { name, message: content, timestamp: Date.now() };
-	  const msgId = getUniqueMsgId(msgData);
-      if (state.renderedMessages.has(msgId)) return;
-      state.renderedMessages.set(msgId);
-		*/
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `msg ${isSelf ? 'msg-right' : 'msg-left'}`;
-      
-      // 消息内容
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'msg-content';
-      
-      // 昵称（所有消息都显示）
-	  /*
-      const nameSpan = document.createElement('div');
-      nameSpan.className = 'msg-name';
-      nameSpan.textContent = name;
-      contentDiv.appendChild(nameSpan);
-      */
-      // 消息气泡
-      const bubble = document.createElement('div');
-      bubble.className = 'msg-bubble';
-      bubble.innerHTML = formatMessage(content);
-      contentDiv.appendChild(bubble);
-      
-      // 组装（无头像）
-      msgDiv.appendChild(contentDiv);
-      
-      els.chatlog.appendChild(msgDiv);
-      scrollToBottom();
-    }
-
-    /**
-     * 添加图片消息（移除头像 + 显示昵称）
-     */
-    function addImageMessage(name, url, isSelf, imgId = '') {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = `img-msg ${isSelf ? 'img-msg-right' : 'img-msg-left'}`;
-      
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'img-content';
-      
-      // 昵称
-	  /*
-      const nameSpan = document.createElement('div');
-      nameSpan.className = 'img-name';
-      nameSpan.textContent = name;
-      contentDiv.appendChild(nameSpan);
-      */
-      // 图片容器
-      const imgBubble = document.createElement('div');
-      imgBubble.className = 'img-bubble';
-      imgBubble.dataset.id = imgId;
-      
-      if (url) {
-        // 加载图片
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-          imgBubble.innerHTML = `<img src="${url}" onclick="window.open('${url}', '_blank')">`;
-        };
-        img.onerror = () => {
-          imgBubble.innerHTML = `
-            <div class="img-error">
-              <svg viewBox="0 0 24 24"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="M12 10l-2 2 2 2 2-2-2-2zm0-6v2h2V4h-2zm0 12v2h2v-2h-2z"/></svg>
-              <span>图片加载失败</span>
-            </div>
-          `;
-        };
-        img.src = url;
-      } else {
-        // 加载中
-        imgBubble.innerHTML = '<div class="img-loading">图片上传中...</div>';
-      }
-      
-      contentDiv.appendChild(imgBubble);
-      msgDiv.appendChild(contentDiv);
-      els.chatlog.appendChild(msgDiv);
-      scrollToBottom();
-    }
-
-    /**
-     * 滚动到底部
-     */
+    // 滚动到底部
     function scrollToBottom() {
       if (state.isAtBottom) {
         els.chatlog.scrollTop = els.chatlog.scrollHeight;
       }
     }
 
-    // ========== 用户列表 ==========
-    /**
-     * 更新用户列表
-     */
-function updateUserList() {
-  els.userList.innerHTML = '';
-  
-  // 无在线用户时的渲染
-  if (state.onlineUsers.length === 0) {
-    const emptyItem = document.createElement('li');
-    emptyItem.className = 'user-item';
-    // 替换为你的黑色人形SVG
-    emptyItem.innerHTML = `
-      <div class="user-avatar">
-        <svg width="512px" height="512px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-          <title>ionicons-v5-j</title>
-          <path d="M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z"/>
-          <path d="M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z" fill="black"/>
-        </svg>
-      </div>
-      <div class="user-name">暂无在线用户</div>
-    `;
-    els.userList.appendChild(emptyItem);
-    return;
-  }
-  
-  // 有在线用户时的渲染
-  state.onlineUsers.forEach(user => {
-    const item = document.createElement('li');
-    item.className = 'user-item';
-    // 替换为你的黑色人形SVG
-    item.innerHTML = `
-      <div class="user-avatar">
-        <svg width="512px" height="512px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-          <title>ionicons-v5-j</title>
-          <path d="M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z"/>
-          <path d="M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z" fill="black"/>
-        </svg>
-      </div>
-      <div class="user-name">${user}</div>
-    `;
-    els.userList.appendChild(item);
-  });
-}
+    // 更新用户列表
+    function updateUserList() {
+      els.userList.innerHTML = '';
+      
+      if (state.onlineUsers.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'user-item';
+        emptyItem.innerHTML = `
+          <div class="user-avatar">
+            <svg width="512px" height="512px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+              <title>ionicons-v5-j</title>
+              <path d="M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z"/>
+              <path d="M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z" fill="black"/>
+            </svg>
+          </div>
+          <div class="user-name">暂无在线用户</div>
+        `;
+        els.userList.appendChild(emptyItem);
+        return;
+      }
+      
+      state.onlineUsers.forEach(user => {
+        const item = document.createElement('li');
+        item.className = 'user-item';
+        item.innerHTML = `
+          <div class="user-avatar">
+            <svg width="512px" height="512px" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+              <title>ionicons-v5-j</title>
+              <path d="M332.64,64.58C313.18,43.57,286,32,256,32c-30.16,0-57.43,11.5-76.8,32.38-19.58,21.11-29.12,49.8-26.88,80.78C156.76,206.28,203.27,256,256,256s99.16-49.71,103.67-110.82C361.94,114.48,352.34,85.85,332.64,64.58Z"/>
+              <path d="M432,480H80A31,31,0,0,1,55.8,468.87c-6.5-7.77-9.12-18.38-7.18-29.11C57.06,392.94,83.4,353.61,124.8,326c36.78-24.51,83.37-38,131.2-38s94.42,13.5,131.2,38c41.4,27.6,67.74,66.93,76.18,113.75,1.94,10.73-.68,21.34-7.18,29.11A31,31,0,0,1,432,480Z" fill="black"/>
+            </svg>
+          </div>
+          <div class="user-name">${user}</div>
+        `;
+        els.userList.appendChild(item);
+      });
+    }
 
-    // ========== 图片上传 ==========
-    /**
-     * 上传图片到ImgBB
-     */
+    // 上传图片到ImgBB
     async function uploadImage(file) {
       if (!file.type.startsWith('image/')) {
         throw new Error('请选择图片文件');
@@ -953,18 +985,55 @@ function updateUserList() {
       throw new Error(data.error?.message || '上传失败');
     }
 
-    // ========== WebSocket 处理 ==========
-    /**
-     * 建立WebSocket连接
-     */
+    // 校验消息是否已存在（队列去重）
+    function isMsgInQueue(msg) {
+      const targetMsgId = getUniqueMsgId(msg);
+      return state.messageQueue.some(item => {
+        return getUniqueMsgId(item) === targetMsgId;
+      });
+    }
+
+    // 清理无效消息队列
+    function cleanupMessageQueue() {
+      const now = Date.now();
+      const validQueue = state.messageQueue.filter(msg => {
+        const msgId = getUniqueMsgId(msg);
+        const msgStatus = state.messageStatus.get(msgId) || { retry: 0, status: "sending" };
+        
+        // 过滤超过最大重试次数且状态为失败的消息
+        if (msgStatus.status === "fail" && msgStatus.retry >= CONFIG.MAX_MSG_RETRY) {
+          state.messageStatus.delete(msgId);
+          return false;
+        }
+        
+        // 过滤超过5分钟的消息
+        const msgTime = msg.timestamp || now;
+        if (now - msgTime > 300000) {
+          state.messageStatus.delete(msgId);
+          return false;
+        }
+        
+        return true;
+      });
+      
+      state.messageQueue = validQueue;
+    }
+
+    // 建立WebSocket连接
     function connectWS() {
-      // 清理旧连接
+      if (state.currentPage === "login") {
+        return;
+      }
+      
+      // 更新WebSocket状态
+      state.wsStatus = "connecting";
       if (state.ws) {
-        try { state.ws.close(); } catch (e) {}
+        try { 
+          state.ws.close(1000, "Reconnecting"); 
+        } catch (e) {}
         state.ws = null;
       }
       
-      // 构建WS URL
       const protocol = location.protocol === 'https:' ? 'wss://' : 'ws://';
       const wsUrl = `${protocol}${location.host}/api/room/${state.roomname}/websocket`;
       
@@ -972,50 +1041,77 @@ function updateUserList() {
         const ws = new WebSocket(wsUrl);
         state.ws = ws;
         
-        // 连接成功
         ws.onopen = () => {
-		  state.isReconnecting = false;
-		  state.reconnectCount = 0;
-		  
-		  // 发送加入消息
-		  ws.send(JSON.stringify({
-			type: 'join',
-			name: state.username
-		  }));
-		  
-		  // 主动请求用户列表（关键补充）
-		  setTimeout(() => {
-			ws.send(JSON.stringify({ type: 'getUsers' }));
-		  }, 500);
-		  
-		  // 启动心跳
-		  startHeartbeat();
-		  
-		  // 请求历史消息
-		  setTimeout(() => {
-			ws.send(JSON.stringify({ type: 'getHistory' }));
-		  }, 1000);
-		  
-		  processMessageQueue();
-		};
+          state.isReconnecting = false;
+          state.reconnectCount = 0;
+          state.wsStatus = "connected";
+          
+          // 更新发送按钮状态
+          toggleSendBtnStatus();
+          
+          ws.send(JSON.stringify({
+            type: 'join',
+            name: state.username
+          }));
+          
+          setTimeout(() => {
+            ws.send(JSON.stringify({ type: 'getUsers' }));
+          }, 500);
+          
+          startHeartbeat();
+          
+          setTimeout(() => {
+            // 优化：获取历史消息时携带已渲染的msgId列表
+            ws.send(JSON.stringify({ 
+              type: 'getHistory',
+              renderedMsgIds: Array.from(state.renderedMessages.keys())
+            }));
+          }, 1000);
+          
+          // 处理消息队列
+          processMessageQueue();
+          
+          // 修复：先清除旧定时器，再启动新定时器
+          if (state.queueCleanupTimer) {
+            clearInterval(state.queueCleanupTimer);
+          }
+          state.queueCleanupTimer = setInterval(cleanupMessageQueue, CONFIG.QUEUE_CLEANUP_INTERVAL);
+        };
         
-        // 接收消息
         ws.onmessage = (e) => {
           resetHeartbeat();
           handleMessage(e.data);
         };
         
-        // 连接关闭
         ws.onclose = (e) => {
           stopHeartbeat();
+          state.wsStatus = "disconnected";
           
-          // 需要重连
-          if (![1001, 1005].includes(e.code) && !state.isReconnecting) {
+          // 更新发送按钮状态
+          toggleSendBtnStatus();
+          
+          // 清除队列清理定时器
+          if (state.queueCleanupTimer) {
+            clearInterval(state.queueCleanupTimer);
+            state.queueCleanupTimer = null;
+          }
+          
+          if (![1000, 1001, 1005].includes(e.code) && !state.isReconnecting) {
             state.isReconnecting = true;
             state.reconnectCount++;
             
             if (state.reconnectCount > CONFIG.MAX_RECONNECT) {
               state.isReconnecting = false;
+              // 更新所有未发送成功的消息状态为失败
+				state.messageQueue.forEach(msg => {
+				  const msgId = getUniqueMsgId(msg);
+				  const msgStatus = state.messageStatus.get(msgId) || { retry: 0, status: "sending" };
+				  if (msgStatus.status === "sending") {
+					msgStatus.status = "fail";
+					state.messageStatus.set(msgId, msgStatus);
+					updateMessageStatusDisplay(msgId, "fail");
+				  }
+				});
               return;
             }
             
@@ -1023,81 +1119,114 @@ function updateUserList() {
           }
         };
         
-        // 连接错误
         ws.onerror = (e) => {
           stopHeartbeat();
+          state.wsStatus = "disconnected";
+          
+          // 更新发送按钮状态
+          toggleSendBtnStatus();
+          
           if (!state.isReconnecting) {
             setTimeout(connectWS, CONFIG.RECONNECT_INTERVAL);
           }
         };
         
       } catch (e) {
+        state.wsStatus = "disconnected";
+        // 更新发送按钮状态
+        toggleSendBtnStatus();
+        
         if (!state.isReconnecting) {
           setTimeout(connectWS, CONFIG.RECONNECT_INTERVAL);
         }
       }
     }
 
-    /**
-     * 处理WebSocket消息（修复重复消息 + 隐藏系统提示）
-     */
-    function handleMessage(rawData) {
+    // 切换发送按钮状态
+    function toggleSendBtnStatus() {
+      if (state.wsStatus === "connected" && els.chatInput.innerText.trim()) {
+        els.sendBtn.classList.remove('disabled');
+      } else {
+        els.sendBtn.classList.add('disabled');
+      }
+    }
+
+	// 处理WebSocket消息（修复：确保图片气泡更新）
+	function handleMessage(rawData) {
 	  try {
 		const data = JSON.parse(rawData);
 		console.log('收到服务端消息:', data);
 
-		// 1. 按类型分流：只处理聊天/历史消息，忽略系统/心跳消息
 		switch(data.type) {
 		  case 'heartbeat':
-		  case 'system': // 系统消息（joined/quit/onlineUsers）只更新用户列表，不渲染
+			return;
+		  case 'system':
 			if (data.onlineUsers) {
 			  state.onlineUsers = Array.isArray(data.onlineUsers) ? data.onlineUsers.filter(u => !!u) : [];
 			  updateUserList();
 			}
 			return;
-		  case 'error': // 错误消息直接忽略
-			console.error('服务端错误:', data.error);
+		  case 'error':
+			console.error('服务端错误:', data.message);
+			if (data.msgId) {
+			  const msgStatus = state.messageStatus.get(data.msgId) || { retry: 0, status: "sending" };
+			  msgStatus.status = "fail";
+			  state.messageStatus.set(data.msgId, msgStatus);
+			  updateMessageStatusDisplay(data.msgId, "fail");
+			}
 			return;
-		  case 'history': // 历史消息单独处理
+		  case 'msgAck':
+			if (data.msgId) {
+			  console.log("收到msgAck，msgId:", data.msgId);
+			  let msgStatus = state.messageStatus.get(data.msgId);
+			  if (!msgStatus) return;
+			  
+			  msgStatus.status = "success";
+			  state.messageStatus.set(data.msgId, msgStatus);
+
+			  // 统一调用文字消息的状态更新函数
+			  updateMessageStatusDisplay(data.msgId, "success");
+			  
+			  // 延迟删除状态（避免重复处理）
+			  setTimeout(() => {
+				state.messageStatus.delete(data.msgId);
+			  }, 10000);
+			}
+			return;
+		  case 'history':
 			if (data.history && Array.isArray(data.history)) {
 			  data.history.forEach(msg => {
-				// 最终兜底：所有字段强制非空
 				const safeMsg = {
 				  name: msg.name || "未知用户",
 				  message: msg.message || "",
 				  timestamp: msg.timestamp || Date.now(),
-				  // isImage: !!msg.isImage,
-				  isImage: !!msg.isImage || /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(msg.message),
+				  isImage: !!msg.isImage,
 				  clientId: msg.clientId || "",
 				  messageId: msg.messageId || ""
 				};
 
-				// 跳过空消息
-				// if (!safeMsg.message.trim()) return;
-				if (!safeMsg.message.trim() || !msg.type) return;
-
+				if (!safeMsg.message.trim()) return;
 				const msgId = getUniqueMsgId(safeMsg);
-				if (!msgId || state.renderedMessages.has(msgId)) return;
-
-				state.renderedMessages.set(msgId, safeMsg.clientId);
-				const isSelf = safeMsg.name === state.username;
-				
-				if (safeMsg.isImage) {
-				  addImageMessage(safeMsg.name, safeMsg.message, isSelf);
-				} else {
-				  addTextMessage(safeMsg.name, safeMsg.message, isSelf);
+				// 新增：标记历史消息为已渲染，避免重复显示
+				if (!state.renderedMessages.has(msgId)) {
+				  state.renderedMessages.set(msgId, safeMsg.clientId);
+				  const isSelf = safeMsg.clientId === state.clientId;
+				  if (safeMsg.isImage) {
+					const imageLink = `<a href="${safeMsg.message}" target="_blank">图片</a>`;
+					addTextMessage(safeMsg.name, imageLink, isSelf, true);
+				  } else {
+					addTextMessage(safeMsg.name, safeMsg.message, isSelf);
+				  }
 				}
 			  });
 			}
 			return;
-		  case 'chat': // 实时聊天消息
+		  case 'chat':
 			break;
-		  default: // 未知类型直接忽略
+		  default:
 			return;
 		}
 
-		// 2. 处理实时聊天消息（已标记为chat类型）
-		// 最终兜底：所有字段非空
 		const safeData = {
 		  name: data.name || "未知用户",
 		  message: data.message || "",
@@ -1107,17 +1236,86 @@ function updateUserList() {
 		  messageId: data.messageId || ""
 		};
 
-		// 跳过空消息
 		if (!safeData.message.trim()) return;
-
 		const msgId = getUniqueMsgId(safeData);
-		if (!msgId || state.renderedMessages.has(msgId) || safeData.clientId === state.clientId) return;
+		console.log("服务端广播msgId：", msgId);
+		
+		// 核心增强：优先全局去重，无论是否是自己的消息
+		if (state.renderedMessages.has(msgId)) {
+		  // 若是自己的消息，仅更新状态，不重复渲染
+		  if (safeData.clientId === state.clientId) {
+			const msgStatus = state.messageStatus.get(msgId);
+			if (msgStatus && msgStatus.status === "sending") {
+			  msgStatus.status = "success";
+			  state.messageStatus.set(msgId, msgStatus);
+			  updateMessageStatusDisplay(msgId, "success");
+			}
+			
+			// ========== 修复：自己的消息 - 强制更新图片气泡内容 ==========
+			if (safeData.isImage) {
+			  const msgDiv = els.chatlog.querySelector(`[data-msg-id="${msgId}"]`);
+			  if (msgDiv) {
+				const bubble = msgDiv.querySelector('.msg-bubble');
+				if (bubble) {
+				  bubble.textContent = ""; // 强制清空
+				  const imageLink = `<a href="${safeData.message}" target="_blank" style="color: blue !important; text-decoration: underline !important;">图片</a>`;
+				  bubble.innerHTML = `${safeData.name}：${imageLink}`;
+				  bubble.style.color = "";
+				}
+			  }
+			}
+			// ===========================================================
+		  }
+		  return; // 已渲染过，直接返回
+		}
+
+		const isSelf = safeData.clientId === state.clientId;
+		// 图片消息额外判重（兜底）
+		const existingImgBubble = els.chatlog.querySelector(`[data-msg-id="${msgId}"][data-isImageMsg="true"]`);
+		if (isSelf || existingImgBubble) {
+		  const msgStatus = state.messageStatus.get(msgId);
+		  if (msgStatus && msgStatus.status === "sending") {
+			msgStatus.status = "success";
+			state.messageStatus.set(msgId, msgStatus);
+			updateMessageStatusDisplay(msgId, "success");
+		  }
+		  
+		  // ========== 修复：自己的消息/图片消息 - 强制更新气泡内容 ==========
+		  if (isSelf && safeData.isImage) {
+			const msgDiv = els.chatlog.querySelector(`[data-msg-id="${msgId}"]`);
+			if (msgDiv) {
+			  const bubble = msgDiv.querySelector('.msg-bubble');
+			  if (bubble) {
+				bubble.textContent = ""; // 强制清空
+				const imageLink = `<a href="${safeData.message}" target="_blank" style="color: blue !important; text-decoration: underline !important;">图片</a>`;
+				bubble.innerHTML = `${safeData.name}：${imageLink}`;
+				bubble.style.color = "";
+			  }
+			}
+		  }
+		  // ===========================================================
+		  
+		  state.renderedMessages.set(msgId, safeData.clientId); // 标记为已渲染
+		  return;
+		}
 
 		state.renderedMessages.set(msgId, safeData.clientId);
-		const isSelf = safeData.name === state.username;
 		
+		// 未读消息判断
+		if (state.currentPage !== "chat") {
+		  state.unreadCount++;
+		  state.hasUnread = true;
+		  sessionStorage.setItem('chatUnreadCount', state.unreadCount);
+		  sessionStorage.setItem('chatHasUnread', 'true');
+		  const showUnreadCount = state.unreadCount > 99 ? "99+" : state.unreadCount;
+		  els.tabChat.dataset.unread = showUnreadCount;
+		  els.tabChat.classList.add("has-unread");
+		}
+		
+		// 仅渲染对方的消息
 		if (safeData.isImage) {
-		  addImageMessage(safeData.name, safeData.message, isSelf);
+		  const imageLink = `<a href="${safeData.message}" target="_blank">图片</a>`;
+		  addTextMessage(safeData.name, imageLink, isSelf, true);
 		} else {
 		  addTextMessage(safeData.name, safeData.message, isSelf);
 		}
@@ -1127,9 +1325,7 @@ function updateUserList() {
 	  }
 	}
 
-    /**
-     * 启动心跳
-     */
+    // 启动心跳
     function startHeartbeat() {
       stopHeartbeat();
       state.heartbeatTimer = setInterval(() => {
@@ -1139,9 +1335,7 @@ function updateUserList() {
       }, CONFIG.HEARTBEAT_INTERVAL);
     }
 
-    /**
-     * 停止心跳
-     */
+    // 停止心跳
     function stopHeartbeat() {
       if (state.heartbeatTimer) {
         clearInterval(state.heartbeatTimer);
@@ -1149,70 +1343,103 @@ function updateUserList() {
       }
     }
 
-    /**
-     * 重置心跳
-     */
+    // 重置心跳
     function resetHeartbeat() {
       stopHeartbeat();
       startHeartbeat();
     }
 
-    // ========== 事件处理 ==========
-    /**
-     * 发送消息（修复重复发送bug）
-     */
-	// 1. 发送消息时获取 div 内容
-	function sendMessage() {
+    // 发送消息（简化版）
+    function sendMessage() {
+	  
 	  const content = els.chatInput.innerText.trim();
-	  if (!content || !state.ws || state.ws.readyState !== WebSocket.OPEN) return;
-	  // 节流：500ms内禁止重复发送
-	  if (state.sendThrottleTimer) return;
-	  state.sendThrottleTimer = setTimeout(() => {
-		state.sendThrottleTimer = null;
-	  }, 500);
-		// 生成唯一消息ID（避免服务端漏收）
-	  const msgUniqueId = `${state.clientId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-	  // 1. 生成消息体（携带客户端ID）
+	  if (!content || state.wsStatus !== "connected") {
+		return;
+	  }
+
+	  const messageId = generateUniqueMsgId();
+	  const now = Date.now();
+	  
 	  const msgData = {
 		message: content,
 		name: state.username,
-		timestamp: Date.now(),
-		clientId: state.clientId // 标记是当前客户端发送的
+		timestamp: now,
+		clientId: state.clientId,
+		messageId: messageId,
+		type: 'chat'
 	  };
-	  // 2. 生成唯一ID并标记为已渲染（本地先标记，避免服务端返回后重复）
+	  
 	  const msgId = getUniqueMsgId(msgData);
+	  
+	  if (isMsgInQueue(msgData) || state.renderedMessages.has(msgId)) {
+		console.warn("消息已存在，避免重复发送:", msgId);
+		return;
+	  }
+	  
 	  state.renderedMessages.set(msgId, state.clientId);
-		// 加入发送队列
+	  state.messageStatus.set(msgId, {
+		status: "sending",
+		retry: 0
+	  });
+	  
 	  state.messageQueue.push(msgData);
-	  // 3. 先本地渲染（用户能立即看到）
-	  addTextMessage(state.username, content, true);
-	 
-	  // 4. 发送到服务端
-	  // state.ws.send(JSON.stringify(msgData));
-	  // 关键修复：触发队列发送（之前缺失这行）
-		processMessageQueue();
-	  // 5. 清空输入框
+	  addTextMessage(state.username, content, true, false, msgId);
+	  processMessageQueue();
 	  els.chatInput.innerText = '';
-	  adjustHeight(); // 重置输入框高度
+
+	  adjustHeight();
+	  toggleSendBtnStatus();
 	}
 
-
+    // 处理消息队列（优化版：添加暂停判断）
 	function processMessageQueue() {
-	  if (state.isSending || state.messageQueue.length === 0) return;
+	  // 校验条件：WebSocket已连接 + 不在发送中 + 队列有消息 + 队列未暂停
+	  if (state.wsStatus !== "connected" || state.isSending || state.messageQueue.length === 0 || state.isQueuePaused) {
+		state.isSending = false;
+		return;
+	  }
 
 	  state.isSending = true;
-	  const currentMsg = state.messageQueue.shift();
+	  // 取出队首消息
+	  const currentMsg = state.messageQueue[0];
+	  const msgId = getUniqueMsgId(currentMsg);
+	  const msgStatus = state.messageStatus.get(msgId) || { retry: 0, status: "sending" };
+
+	  // 校验重试次数
+	  if (msgStatus.retry >= CONFIG.MAX_MSG_RETRY) {
+		msgStatus.status = "fail";
+		state.messageStatus.set(msgId, msgStatus);
+		updateMessageStatusDisplay(msgId, "fail");
+		
+		// 移除失败消息
+		state.messageQueue.shift();
+		state.isSending = false;
+		setTimeout(processMessageQueue, 100);
+		return;
+	  }
 
 	  try {
-	    console.log('发送消息到服务端:', currentMsg);
+		console.log('发送消息到服务端:', currentMsg);
 		state.ws.send(JSON.stringify(currentMsg));
 
-		// 检查发送状态
 		const checkSendStatus = () => {
-		  if (state.ws.bufferedAmount === 0) {
+		  if (!state.ws || state.ws.readyState !== WebSocket.OPEN) {
+			// WebSocket异常：累计重试次数，保持在队首
+			msgStatus.retry++;
+			state.messageStatus.set(msgId, msgStatus);
+			updateMessageStatusDisplay(msgId, "sending");
 			state.isSending = false;
-			processMessageQueue();
+			setTimeout(processMessageQueue, 2000);
+			return;
+		  }
+
+		  if (state.ws.bufferedAmount === 0) {
+			// 消息已写入缓冲区：移除队列，继续处理下一条
+			state.messageQueue.shift();
+			state.isSending = false;
+			setTimeout(processMessageQueue, 100);
 		  } else {
+			// 继续等待缓冲区清空
 			setTimeout(checkSendStatus, 50);
 		  }
 		};
@@ -1220,456 +1447,391 @@ function updateUserList() {
 
 	  } catch (e) {
 		console.error('消息发送失败，稍后重试:', e);
-		state.messageQueue.unshift(currentMsg);
+		// 发送异常：累计重试次数
+		msgStatus.retry++;
+		state.messageStatus.set(msgId, msgStatus);
+		updateMessageStatusDisplay(msgId, "sending");
 		state.isSending = false;
-		setTimeout(processMessageQueue, 2000);
+		setTimeout(processMessageQueue, 6000);
 	  }
 	}
 
-    /**
-     * 处理图片上传
-     */
-   async function handleImageUpload(e) {
+	// 处理图片上传（修复：确保上传成功后更新气泡）
+	async function handleImageUpload(e) {
 	  const file = e.target.files[0];
 	  if (!file) return;
 	  
-	  // 生成图片ID
-	  const imgId = `img_${Date.now()}`;
-	  state.sentImageIds.add(imgId);
-	  
-	  // 显示上传中（原有逻辑不变）
-	  addImageMessage(state.username, '', true, imgId);
-	  
+	  // 1. 创建上传气泡，仅获取msgId（取消tempMsgId）
+	  const msgId = createUploadingMsgBubble();
+
 	  try {
-		// 上传图片（原有逻辑不变）
+		if (!file.type.startsWith('image/')) {
+		  throw new Error('请选择图片文件');
+		}
+		
+		if (file.size > CONFIG.MAX_IMG_SIZE) {
+		  throw new Error(`图片大小不能超过${CONFIG.MAX_IMG_SIZE/1024/1024}MB`);
+		}
+		
+		// 2. 上传图片
 		const imgUrl = await uploadImage(file);
+		console.log("上传成功msgId：", msgId, "图片链接：", imgUrl);
 		
-		// ========== 改动部分开始 ==========
-		// 原：直接通过 ws.send 发送
-		// 新：封装消息体 → 加入队列 → 触发队列发送（和文字消息逻辑统一）
-		if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-		  // 封装图片消息体（补充 clientId/messageId，和文字消息格式对齐）
-		  const imgMsgData = {
-			messageId: `${state.clientId}_${Date.now()}_img_${imgId}`, // 全局唯一ID
-			message: imgUrl,
-			name: state.username,
-			isImage: true,
-			msgId: imgId,
-			timestamp: Date.now(),
-			clientId: state.clientId // 标记发送方，避免自己重复渲染
-		  };
-		  // 加入发送队列
-		  state.messageQueue.push(imgMsgData);
-		  // 触发队列处理（核心：和文字消息一样走队列）
-		  processMessageQueue();
+		// 3. 直接通过msgId更新气泡（修复：简化选择器，强制覆盖内容）
+		const msgDiv = els.chatlog.querySelector(`[data-msg-id="${msgId}"]`);
+		if (msgDiv) {
+		  msgDiv.dataset.isImageMsg = "true"; // 强制添加标识
+		  const bubble = msgDiv.querySelector('.msg-bubble');
+		  if (bubble) {
+			bubble.textContent = ""; // 强制清空原有内容
+			const imageLink = `<a href="${imgUrl}" target="_blank" style="color: blue !important; text-decoration: underline !important;">图片</a>`;
+			bubble.innerHTML = `${state.username}：${imageLink}`;
+			bubble.style.color = ""; // 重置颜色
+		  }
+		  // 直接更新消息状态为“发送中”（等待服务端确认）
+		  updateMessageStatusDisplay(msgId, "sending");
 		}
-		// ========== 改动部分结束 ==========
 		
-		// 更新图片显示（原有逻辑不变）
-		const imgBubble = document.querySelector(`.img-bubble[data-id="${imgId}"]`);
-		if (imgBubble) {
-		  const img = new Image();
-		  img.onload = () => {
-			imgBubble.innerHTML = `<img src="${imgUrl}" onclick="window.open('${imgUrl}', '_blank')">`;
-		  };
-		  img.src = imgUrl;
+		// 4. 构造图片消息，使用统一的msgId
+		const now = Date.now();
+		const imgMsgData = {
+		  messageId: msgId, // 统一使用msgId作为消息唯一标识
+		  message: imgUrl,
+		  name: state.username,
+		  isImage: true,
+		  timestamp: now,
+		  clientId: state.clientId,
+		  type: 'chat'
+		};
+		
+		const imgMsgUniqueId = getUniqueMsgId(imgMsgData); 
+		
+		// 队列去重
+		if (isMsgInQueue(imgMsgData)) {
+		  updateMessageStatusDisplay(msgId, "success");
+		  return;
 		}
+		
+		// 不提前加入renderedMessages，避免服务端广播被拦截
+		// state.renderedMessages.set(imgMsgUniqueId, state.clientId);
+		
+		// 消息状态直接绑定msgId
+		state.messageStatus.set(imgMsgUniqueId, {
+		  status: "sending",
+		  retry: 0
+		});
+		state.messageQueue.push(imgMsgData);
+		
+		// 5. 处理队列
+		processMessageQueue();
+		
+		// 清空输入框
+		els.chatInput.innerText = '';
+		adjustHeight();
 		
 	  } catch (e) {
-		// 显示错误（原有逻辑不变）
-		const imgBubble = document.querySelector(`.img-bubble[data-id="${imgId}"]`);
-		if (imgBubble) {
-		  imgBubble.innerHTML = `
-			<div class="img-error">
-			  <svg viewBox="0 0 24 24"><path d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/><path d="M12 10l-2 2 2 2 2-2-2-2zm0-6v2h2V4h-2zm0 12v2h2v-2h-2z"/></svg>
-			  <span>${e.message}</span>
-			</div>
-		  `;
+		const errorText = `图片上传失败：${e.message}`;
+		// 通过msgId更新失败状态
+		const msgDiv = els.chatlog.querySelector(`[data-msg-id="${msgId}"]`);
+		if (msgDiv) {
+		  const bubble = msgDiv.querySelector('.msg-bubble');
+		  if (bubble) {
+			bubble.innerHTML = `${state.username}：${errorText}`;
+			bubble.style.color = "#d32f2f";
+		  }
+		  updateMessageStatusDisplay(msgId, "fail");
 		}
 		console.error('图片上传失败:', e);
 	  } finally {
-		// 清空文件选择（原有逻辑不变）
 		els.imageUpload.value = '';
 	  }
 	}
 
-    /**
-     * 进入私人房间
-     */
-	 async function enterRoom() {
-	  const username = els.nameInput.value.trim();
-	  
-	  // 仅校验昵称
-	  if (!username) {
-		els.nameInput.focus();
-		return;
-	  }
-	  
-	  let targetRoomId = '';
-	  if (location.hash) {
-		targetRoomId = location.hash.slice(1).trim(); // 去掉 # 号
-		// 校验是否为 64 位私人房间 ID
-		if (targetRoomId.length === 64 && /^[a-f0-9]+$/i.test(targetRoomId)) {
-		  // 直接加入已有房间，不创建新房间
-		  joinExistingRoom(username, targetRoomId);
-		  return; // 终止后续创建逻辑
-		}
-	  }
-
-	  // 调用后端接口生成私人房间ID
-	  try {
-		// 显示加载状态
-		els.enterBtn.textContent = "加载中...";
-		els.enterBtn.style.pointerEvents = "none";
-		
-		const controller = new AbortController();
-		const timeoutId = setTimeout(() => controller.abort(), 30000); // 10秒超时
-		// 调用/api/room POST接口
-		/*
-		const response = await fetch(`https://${location.host}/api/room`, {
-		  method: "POST",
-		  headers: {
-			"Content-Type": "application/json"
-		  },
-		  timeout: 10000
-		});
-		*/
-		const response = await fetch(`${location.protocol}//${location.host}/api/room`, {
-		  method: "POST",
-		  signal: controller.signal, // 绑定超时控制器
-		});
-		clearTimeout(timeoutId); // 清除超时定时器
-		
-		if (!response.ok) {
-		  throw new Error(`创建失败：${response.status}`);
-		}
-
-		// 获取64位私人房间ID
-		const privateRoomId = await response.text();
-		if (!privateRoomId || privateRoomId.length !== 64) {
-		  throw new Error("私人房间ID生成失败");
-		}
-		// 加入新创建的房间
-		joinExistingRoom(username, privateRoomId);
-		// 清空历史记录
-		state.renderedMessages.clear();
-		state.sentImageIds.clear();
-		
-		// 更新状态（使用生成的私人ID）
-		state.username = username;
-		state.roomname = privateRoomId;
-
-		// 更新UI
-		toggleElement(els.loginPage, false);
-		toggleElement(els.userListPage, true);
-		toggleElement(els.backBtn, true);
-		toggleElement(els.shareBtn, true);
-
-
-		// 更新URL（写入私人ID）
-		location.hash = privateRoomId;
-
-		// 连接WebSocket
-		connectWS();
-		els.chatInput.blur();
-
-	  } catch (e) {
-		alert(`进入房间失败：${e.message}`);
-		console.error("私人房间创建失败：", e);
-		// 恢复按钮状态
-		els.enterBtn.textContent = "进入房间";
-		els.enterBtn.style.pointerEvents = "auto";
-	  }
-	}
-	
-	// 加入已有房间（无论是创建的还是分享的）
-	function joinExistingRoom(username, roomId) {
-	  // 清空历史记录
-	  state.renderedMessages.clear();
-	  state.sentImageIds.clear();
-	  
-	  // 更新全局状态
-	  state.username = username;
-	  state.roomname = roomId;
-
-	  // 更新UI：直接进入聊天页（跳过用户列表）
-	  toggleElement(els.loginPage, false);
-	  toggleElement(els.userListPage, false); // 隐藏用户列表
-	  toggleElement(els.chatPage, true);      // 显示聊天页
-	  toggleElement(els.backBtn, true);
-	  toggleElement(els.shareBtn, true);
-
-
-	  // 更新URL hash（刷新页面也能保留房间）
-	  location.hash = roomId;
-
-	  // 连接WebSocket
-	  connectWS();
-	  els.chatInput.blur();
-
-	  // 恢复按钮状态
-	  els.enterBtn.textContent = "进入房间";
-	  els.enterBtn.style.pointerEvents = "auto";
-	}
-	 /*
-    function enterRoom() {
-	  const username = els.nameInput.value.trim();
-	  const roomname = els.roomInput.value.trim().replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
-	  
-	  if (!username) {
-		els.nameInput.focus();
-		return;
-	  }
-	  
-	  if (!roomname) {
-		els.roomInput.focus();
-		return;
-	  }
-	  // 新增：清空历史渲染记录（关键！）
-	  state.renderedMessages.clear();
-	  state.sentImageIds.clear();
-	  // 更新状态
-	  state.username = username;
-	  state.roomname = roomname;
-	  
-	  // 更新UI：显示用户列表 + 导航栏按钮
-	  toggleElement(els.loginPage, false);
-	  toggleElement(els.userListPage, true);
-	  toggleElement(els.backBtn, true);
-	  toggleElement(els.shareBtn, true);
-	  
-	  // 更新URL
-	  location.hash = roomname;
-	  
-	  // 连接WebSocket（连接成功后会自动获取用户列表）
-	  connectWS();
-	  els.chatInput.blur(); // 强制输入框失去焦点
-	}
-	*/
-    /**
-     * 返回按钮逻辑：聊天页→用户列表→登录页
-     */
-    // 替换原 goBack 函数
-	function goBack() {
-	  // 1. 聊天页 → 用户列表页
-	  if (!els.chatPage.classList.contains('hide')) {
-		toggleElement(els.chatPage, false);
-		toggleElement(els.userListPage, true);
-		activateTab(els.tabUser);
-		return; // 关键：返回，不执行后续逻辑
-	  }
-	  
-	  // 2. 用户列表页 → 登录页
-	  if (!els.userListPage.classList.contains('hide')) {
-		// 关闭连接
-		if (state.ws) {
-		  try {
-			state.ws.send(JSON.stringify({ type: 'quit', name: state.username }));
-			state.ws.close();
-		  } catch (e) {}
-		  state.ws = null;
-		}
-		
-		// 清理定时器
-		stopHeartbeat();
-		if (state.reconnectTimer) clearTimeout(state.reconnectTimer);
-		
-		// 重置状态
-		state.username = '';
-		state.roomname = '';
-		state.onlineUsers = [];
-		state.renderedMessages.clear();
-		state.sentImageIds.clear();
-		state.clientId = Math.random().toString(36).slice(2, 15) + Date.now();
-		
-		// 恢复按钮状态（修复「创建中」不重置）
-		els.enterBtn.textContent = "进入房间";
-		els.enterBtn.style.pointerEvents = "auto";
-		
-		// 更新UI
-		toggleElement(els.userListPage, false);
-		toggleElement(els.loginPage, true);
-		toggleElement(els.backBtn, false);
-		toggleElement(els.shareBtn, false);
-		els.chatlog.innerHTML = '';
-		els.chatInput.innerText = ''; // 修复：用innerText而非value
-		els.nameInput.focus();
-	  }
-	}
-
-    // ========== 初始化 ==========
-    function init() {
-      // 从URL恢复房间名
-	  /*
+    // 进入房间（简化版）
+    async function enterRoom() {
+      const username = els.nameInput.value.trim();
+      
+      if (!username) {
+        els.nameInput.focus();
+        return;
+      }
+      
+      let targetRoomId = '';
       if (location.hash) {
-        els.roomInput.value = location.hash.slice(1);
-      } */
+        targetRoomId = location.hash.slice(1).trim();
+        if (targetRoomId.length === 64 && /^[a-f0-9]+$/i.test(targetRoomId)) {
+          joinExistingRoom(username, targetRoomId);
+          return;
+        }
+      }
+
+      try {
+        els.enterBtn.textContent = "加载中...";
+        els.enterBtn.style.pointerEvents = "none";
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+        const response = await fetch(`${location.protocol}//${location.host}/api/room`, {
+          method: "POST",
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`创建失败：${response.status}`);
+        }
+
+        const privateRoomId = await response.text();
+        if (!privateRoomId || privateRoomId.length !== 64) {
+          throw new Error("私人房间ID生成失败");
+        }
+        
+        joinExistingRoom(username, privateRoomId);
+
+      } catch (e) {
+        alert(`进入房间失败：${e.message}`);
+        console.error("私人房间创建失败：", e);
+        els.enterBtn.textContent = "进入房间";
+        els.enterBtn.style.pointerEvents = "auto";
+      }
+    }
+
+    // 加入已有房间
+    function joinExistingRoom(username, roomId) {
+      state.renderedMessages.clear();
+      state.messageQueue = [];
+      state.messageStatus.clear();
       
-      // 登录按钮
+      state.username = username;
+      state.roomname = roomId;
+      state.currentPage = "userList";
+
+      toggleElement(els.loginPage, false);
+      toggleElement(els.userListPage, true);
+      toggleElement(els.chatPage, false);
+      toggleElement(els.backBtn, true);
+      toggleElement(els.shareBtn, true);
+      
+      location.hash = roomId;
+      connectWS();
+      els.chatInput.blur();
+
+      els.enterBtn.textContent = "进入房间";
+      els.enterBtn.style.pointerEvents = "auto";
+    }
+
+    // 返回按钮逻辑
+    function goBack() {
+      if (!els.chatPage.classList.contains('hide')) {
+        toggleElement(els.chatPage, false);
+        toggleElement(els.userListPage, true);
+        activateTab(els.tabUser);
+        state.currentPage = "userList";
+        return;
+      }
+      
+      if (!els.userListPage.classList.contains('hide')) {
+        if (state.ws) {
+          try {
+            state.ws.send(JSON.stringify({ type: 'quit', name: state.username }));
+            state.ws.close(1000, "User quit");
+          } catch (e) {}
+          state.ws = null;
+        }
+        
+        stopHeartbeat();
+        if (state.reconnectTimer) clearTimeout(state.reconnectTimer);
+        if (state.queueCleanupTimer) {
+          clearInterval(state.queueCleanupTimer);
+          state.queueCleanupTimer = null;
+        }
+        
+        state.username = '';
+        state.roomname = '';
+        state.onlineUsers = [];
+        state.renderedMessages.clear();
+        state.messageQueue = [];
+        state.messageStatus.clear();
+        state.clientId = Math.random().toString(36).slice(2, 15) + Date.now();
+        state.currentPage = "login";
+        state.wsStatus = "disconnected";
+        state.unreadCount = 0;
+        state.hasUnread = false;
+        
+        els.enterBtn.textContent = "进入房间";
+        els.enterBtn.style.pointerEvents = "auto";
+        
+        toggleElement(els.userListPage, false);
+        toggleElement(els.loginPage, true);
+        toggleElement(els.backBtn, false);
+        toggleElement(els.shareBtn, false);
+        els.chatlog.innerHTML = '';
+        els.chatInput.innerText = '';
+        adjustHeight();
+        els.nameInput.focus();
+        
+        // 清空未读红点
+        els.tabChat.dataset.unread = "";
+        els.tabChat.classList.remove("has-unread");
+      }
+    }
+
+    // 初始化
+    function init() {
       els.enterBtn.addEventListener('click', enterRoom);
-      
-      // 返回按钮
       els.backBtn.addEventListener('click', goBack);
       
       // 分享按钮
-	  els.shareBtn.addEventListener('click', async () => {
-		  const roomUrl = `${location.origin}${location.pathname}#${state.roomname}`;
-		  const shareTitle = 'Cloudflare 私人聊天室';
-		  const shareText = '邀请你加入我的私人聊天室，点击链接即可进入';
+      els.shareBtn.addEventListener('click', async () => {
+        const roomUrl = `${location.origin}${location.pathname}#${state.roomname}`;
+        const shareTitle = 'Cloudflare 私人聊天室';
+        const shareText = '邀请你加入我的私人聊天室，点击链接即可进入';
 
-		  try {
-			await navigator.share({
-			  title: shareTitle,
-			  text: shareText,
-			  url: roomUrl
-			});
-			console.log('分享成功');
-		  } catch (err) {
-			// 关键：只处理 "不支持 API" 的错误，忽略用户主动取消
-			// AbortError 是用户关闭分享面板触发的错误
-			if (err.name !== 'AbortError') {
-			  console.log('Web Share API 不支持，降级为复制链接', err);
-			  try {
-				await navigator.clipboard.writeText(roomUrl);
-				alert('私人房间链接已复制到剪贴板，你可以手动分享～');
-			  } catch (clipboardErr) {
-				prompt('复制私人房间链接（请手动复制）', roomUrl);
-			  }
-			} else {
-			  // 用户主动取消分享，什么都不做
-			  console.log('用户取消了分享');
-			}
-		  }
-		});
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: roomUrl
+          });
+          console.log('分享成功');
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.log('Web Share API 不支持，降级为复制链接', err);
+            try {
+              await navigator.clipboard.writeText(roomUrl);
+              alert('私人房间链接已复制到剪贴板，你可以手动分享～');
+            } catch (clipboardErr) {
+              prompt('复制私人房间链接（请手动复制）', roomUrl);
+            }
+          } else {
+            console.log('用户取消了分享');
+          }
+        }
+      });
 
-      // 发送消息
       els.sendBtn.addEventListener('click', sendMessage);
       
-// 替换原回车事件监听（简化版：无论是否有文字，回车直接换行）
-//-----------------------------
-function isEmptyContent() {
-  const content = els.chatInput.innerHTML.trim();
-  return content === '' || content === '<br>';
+      // 输入框事件
+     els.chatInput.addEventListener('focus', () => {
+	  if (els.chatInput.innerHTML.trim() === '') {
+		els.chatInput.innerHTML = '';
+	  }
+
+	  const sel = window.getSelection();
+	  const range = document.createRange();
+	  
+	  // 确保光标定位在最后一个节点的末尾
+	  const lastChild = els.chatInput.lastChild;
+	  if (lastChild && lastChild.nodeType === Node.ELEMENT_NODE) {
+		range.selectNodeContents(lastChild);
+		range.collapse(false);
+	  } else if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+		range.setStart(lastChild, lastChild.textContent.length);
+		range.collapse(true);
+	  } else {
+		range.selectNodeContents(els.chatInput);
+		range.collapse(false);
+	  }
+	  
+	  sel.removeAllRanges();
+	  sel.addRange(range);
+	  
+	  // 记录当前是否在底部
+	  state.isAtBottom = Math.abs(els.chatlog.scrollHeight - els.chatlog.scrollTop - els.chatlog.clientHeight) < 10;
+	});
+
+	// 输入框内容变化事件
+	els.chatInput.addEventListener('input', () => {
+	  adjustHeight();
+	  toggleSendBtnStatus();
+	});
+
+	// 输入框失焦事件
+	els.chatInput.addEventListener('blur', () => {
+	  scrollToBottom();
+	});
+
+	// 图片上传事件
+	els.imageUpload.addEventListener('change', handleImageUpload);
+
+	// 聊天记录滚动事件
+	els.chatlog.addEventListener('scroll', () => {
+	  state.isAtBottom = Math.abs(els.chatlog.scrollHeight - els.chatlog.scrollTop - els.chatlog.clientHeight) < 10;
+	});
+
+	// 选项卡切换事件
+	els.tabChat.addEventListener('click', () => {
+	  toggleElement(els.userListPage, false);
+	  toggleElement(els.chatPage, true);
+	  activateTab(els.tabChat);
+	  state.currentPage = "chat";
+	  
+	  // 清空未读消息
+	  state.unreadCount = 0;
+	  state.hasUnread = false;
+	  sessionStorage.setItem('chatUnreadCount', '0');
+	  sessionStorage.setItem('chatHasUnread', 'false');
+	  els.tabChat.dataset.unread = "";
+	  els.tabChat.classList.remove("has-unread");
+	  
+	  scrollToBottom();
+	});
+
+	els.tabUser.addEventListener('click', () => {
+	  toggleElement(els.chatPage, false);
+	  toggleElement(els.userListPage, true);
+	  activateTab(els.tabUser);
+	  state.currentPage = "userList";
+	});
+
+	// 标签页可见性变化事件（优化消息队列）
+	document.addEventListener('visibilitychange', () => {
+	  if (document.hidden) {
+		state.isQueuePaused = true;
+	  } else {
+		state.isQueuePaused = false;
+		// 恢复后立即处理队列
+		setTimeout(processMessageQueue, 100);
+		
+		// 切换到聊天页时清空未读
+		if (state.currentPage === "chat") {
+		  state.unreadCount = 0;
+		  state.hasUnread = false;
+		  sessionStorage.setItem('chatUnreadCount', '0');
+		  sessionStorage.setItem('chatHasUnread', 'false');
+		  els.tabChat.dataset.unread = "";
+		  els.tabChat.classList.remove("has-unread");
+		}
+	  }
+	});
+
+	// 页面卸载事件
+	window.addEventListener('beforeunload', () => {
+	  if (state.ws) {
+		try {
+		  state.ws.send(JSON.stringify({ type: 'quit', name: state.username }));
+		  state.ws.close(1000, "Page unload");
+		} catch (e) {}
+	  }
+	  stopHeartbeat();
+	  if (state.reconnectTimer) clearTimeout(state.reconnectTimer);
+	  if (state.queueCleanupTimer) clearInterval(state.queueCleanupTimer);
+	});
+
+	// 初始化输入框高度
+	adjustHeight();
+	
+	// 初始化未读红点
+	if (state.hasUnread) {
+	  const showUnreadCount = state.unreadCount > 99 ? "99+" : state.unreadCount;
+	  els.tabChat.dataset.unread = showUnreadCount;
+	  els.tabChat.classList.add("has-unread");
+	}
 }
 
-els.chatInput.addEventListener('focus', () => {
-  if (isEmptyContent()) {
-    els.chatInput.innerHTML = '';
-  }
-  
-  const sel = window.getSelection();
-  const range = document.createRange();
-  range.selectNodeContents(els.chatInput);
-  range.collapse(false);
-  sel.removeAllRanges();
-  sel.addRange(range);
-});
-
-els.chatInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.ctrlKey) {
-    e.preventDefault();
-
-    if (isEmptyContent()) {
-      els.chatInput.innerHTML = '';
-    }
-
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return;
-
-    const range = sel.getRangeAt(0);
-
-    const br1 = document.createElement('br');
-    const br2 = document.createElement('br');
-
-    range.insertNode(br1);
-    range.setStartAfter(br1);
-    range.insertNode(br2);
-    range.setStartAfter(br2);
-    range.collapse(true);
-
-    sel.removeAllRanges();
-    sel.addRange(range);
-
-    requestAnimationFrame(adjustHeight);
-  } else if (e.key === 'Enter' && e.ctrlKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-
-
-els.chatInput.addEventListener('input', (e) => {
-  if (e.inputType === 'insertParagraph' || e.inputType === 'insertLineBreak') {
-    e.preventDefault();
-    return;
-  }
-  adjustHeight();
-});
-
-els.chatInput.addEventListener('blur', () => {
-  if (isEmptyContent()) {
-    els.chatInput.innerHTML = '';
-  }
-});
-      
-      // 图片上传
-      els.imageUpload.addEventListener('change', handleImageUpload);
-	  
-
-      
-      // 选项卡切换：用户→聊天
-      
-      els.tabChat.addEventListener('click', () => {
-        activateTab(els.tabChat);
-        toggleElement(els.userListPage, false);
-        toggleElement(els.chatPage, true);
-        els.chatInput.blur(); // 强制失焦
-        scrollToBottom();
-      });
-      
-      // 滚动监听
-      els.chatlog.addEventListener('scroll', () => {
-        const { scrollTop, scrollHeight, clientHeight } = els.chatlog;
-        state.isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
-      });
-      
-      // 昵称/房间名输入限制
-      els.nameInput.addEventListener('input', (e) => {
-        if (e.target.value.length > 32) e.target.value = e.target.value.slice(0, 32);
-      });
-      /*
-      els.roomInput.addEventListener('input', (e) => {
-        if (e.target.value.length > 32) e.target.value = e.target.value.slice(0, 32);
-      }); */
-      
-      // 回车登录
-	  /*
-      els.nameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') els.roomInput.focus();
-      }); */
-      /*
-      els.roomInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') enterRoom();
-      }); */
-
-      // 聚焦昵称输入框
-      els.nameInput.focus();
-    }
-
-    // 启动应用
-    window.addEventListener('load', init);
-    
-    // 页面关闭清理
-    window.addEventListener('beforeunload', () => {
-      if (state.ws) {
-        try {
-          state.ws.send(JSON.stringify({ type: 'quit', name: state.username }));
-          state.ws.close();
-        } catch (e) {}
-      }
-      stopHeartbeat();
-    });
+// 页面加载完成后初始化
+window.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
