@@ -1740,7 +1740,12 @@
 	  // 记录当前是否在底部
 	  state.isAtBottom = Math.abs(els.chatlog.scrollHeight - els.chatlog.scrollTop - els.chatlog.clientHeight) < 10;
 	});
-
+	
+	els.chatInput.addEventListener('keydown', (e) => {
+	  if (e.key === 'Enter' && !els.chatInput.innerText.trim()) {
+		e.preventDefault(); // 禁止空输入框回车
+	  }
+	});
 	// 输入框内容变化事件
 	els.chatInput.addEventListener('input', () => {
 	  adjustHeight();
